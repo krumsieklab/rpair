@@ -15,7 +15,7 @@
       integer pp(ncp,2)
       intr = 0 
 
-      !print *, "flmin = ", flmin
+c     print *, "flmin = ", flmin
       x2 =  x(pp(:,1),:) - x(pp(:,2),:)
 
       if(maxval(vp) .gt. 0.0)goto 12221                                    1541
@@ -61,13 +61,13 @@
 12341 continue                                                             1560
 12342 continue                                                             1560
 12331 continue                                                             1561
-c      call lognet2n(parm,ncp,ni,x2,y(:,1),g(:,1),ww,ju,vq,cl,ne,nx,nlam,f 1563 
-c     *lmin,ulam,  thr,isd,intr,maxit,kopt,lmu,a0,ca,ia,nin,dev0,dev,alm,n
-c     *lp,jerr)
+      call lognet2n(parm,ncp,ni,x2,y(:,1),g(:,1),ww,ju,vq,cl,ne,nx,nlam, 1563 
+     *flmin,ulam,  thr,isd,intr,maxit,kopt,lmu,a0,ca,ia,nin,dev0,dev,
+     *alm,nlp,jerr)
       goto 12301                                                           1564
 12311 if(kopt .ne. 2)goto 12351                                            1564
 c     call multlstandard1(ncp,ni,x2,ww,ju,isd,intr,xm,xs,xv)              1565
-      if(isd .le. 0)goto 12371                                             1565
+c     if(isd .le. 0)goto 12371                                             1565
 12380 do 12381 j=1,ni                                                      1565
       cl(:,j)=cl(:,j)*xs(j)                                                1565
 12381 continue                                                             1565
@@ -84,8 +84,9 @@ c     goto 12391                                                           1569
 12421 continue                                                             1570
 12422 continue                                                             1570
 12411 continue                                                             1571
-c      call lognetn(parm,ncp,ni,nc,x2,y,g,ww,ju,vq,cl,ne,nx,nlam,flmin,ula 1573 
-c     *m,thr,isd,intr,maxit,kopt,lmu,a0,ca,ia,nin,dev0,dev,alm,nlp,jerr)
+      call lognetn(parm,ncp,ni,nc,x2,y,g,ww,ju,vq,cl,ne,nx,nlam,flmin,     1573 
+     *ulam,thr,isd,intr,maxit,kopt,lmu,a0,ca,ia,nin,dev0,dev,alm,nlp,
+     *jerr)
 12391 continue                                                             1574
 12301 continue                                                             1574
       if(jerr.gt.0) return                                                 1574
