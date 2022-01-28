@@ -1,5 +1,8 @@
+# used in repair_gloss
+# checks the error message - makes fortran message human readable
 jerr<- function (fit, ...)  UseMethod("jerr")
 
+# used in repair_gloss
 jerr.glmnetfit <- function(fit, maxit, pmax, loss_type){
   n = fit$jerr
   
@@ -56,6 +59,8 @@ jerr.glmnetfit <- function(fit, maxit, pmax, loss_type){
   return(errlist)
 }
 
+# hinge loss - optimizer (gcdnet)
+# not used for now
 jerr.gcdnetfit <- function(fit, maxit, pmax, loss_type){
 
   n = fit$jerr
@@ -89,6 +94,7 @@ jerr.gcdnetfit <- function(fit, maxit, pmax, loss_type){
   
 }
 
+# used in reapir_gloss
 fix_lam<- function (lam) {
   if (length(lam) > 2) {
     llam = log(lam)
@@ -97,6 +103,7 @@ fix_lam<- function (lam) {
   lam
 }
 
+# used in repair_gloss
 getcoef<- function (fit, ...)  UseMethod("getcoef")
 
 getcoef.glmnetfit <- function (fit, nvars, pmax, vnames) {
@@ -130,6 +137,8 @@ getcoef.glmnetfit <- function (fit, nvars, pmax, vnames) {
   list(beta = beta, df = df, dim = dd, lambda = lam)
 }
 
+# hinge loss - optimizer (gcdnet)
+# not used for now
 getcoef.gcdnetfit <- function (fit, nvars, pmax, vnames) { #maxit, 
   
   nalam <- fit$nalam
@@ -170,6 +179,7 @@ getcoef.gcdnetfit <- function (fit, nvars, pmax, vnames) { #maxit,
   list( beta = beta, df = df, dim = dd, lambda = lam)
 }
 
+# not used
 zeromat <- function (nvars, nalam, vnames, stepnames) {
   ca <- rep(0, nalam)
   ia <- seq(nalam + 1)
@@ -179,6 +189,7 @@ zeromat <- function (nvars, nalam, vnames, stepnames) {
       x = as.vector(ca), p = as.integer(ia - 1), i = as.integer(ja - 1))
 }
 
+# not used
 getmin <- function (lambda, cvm, cvsd) {
   cvmin = min(cvm, na.rm = TRUE)
   idmin = cvm <= cvmin

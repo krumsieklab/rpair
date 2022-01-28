@@ -55,6 +55,7 @@ y_to_pairs.numeric <- function(q){
   return(which(outer(q, q, ">"), arr.ind = T))
 }
 
+# M: keep for now
 # y_to_pairs.matrix <- function(m){
 #   # if( identical(colnames(m),c("time","status")) | identical(colnames(m),c("start", "stop", "status")) ){
 #   #   return(y_to_pairs.Surv(m))

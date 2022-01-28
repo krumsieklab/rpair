@@ -23,10 +23,7 @@ predict.rpair <- function(object, newx, type = c("link",
   #   }
   # }
   
-  # KC: seems df corresponds to a0 in our case? check this
-  a0 = t(as.matrix(object$df))
-  rownames(a0) = "(Intercept)"
-  nbeta = methods::rbind2(a0, object$beta)
+  nbeta = object$beta
   
   # KC: remove s for now
   # if (!is.null(s)) {
@@ -46,7 +43,7 @@ predict.rpair <- function(object, newx, type = c("link",
   if (type == "coefficients") 
     return(nbeta)
   if (type == "nonzero") 
-    return(glmnet:::nonzeroCoef(nbeta[-1, , drop = FALSE], bystep = TRUE))
+    return(glmnet:::nonzeroCoef(nbeta, bystep = TRUE))
   if (inherits(newx, "sparseMatrix")) 
     newx = as(newx, "dgCMatrix")
   dx = dim(newx)
@@ -56,7 +53,8 @@ predict.rpair <- function(object, newx, type = c("link",
   if (ncol(newx) != p) 
     stop(paste0("The number of variables in newx must be ", 
                 p))
-  nfit = as.matrix(cbind2(1, newx) %*% nbeta)
+  #nfit = as.matrix(cbind2(1, newx) %*% nbeta)
+  nfit = as.matrix(newx %*% nbeta)
   
   # KC: remove offset functionality for now
   # if (object$offset) {
@@ -148,7 +146,8 @@ plotcoef <- function (beta, norm, lambda, df, dev, label = FALSE, legend = FALSE
   g <- plot_df %>% ggplot(aes(x=index,y=value,col=variable)) + 
     geom_line() +
     xlab(iname) +
-    ylab(ylab)
+    ylab(ylab) +
+    theme_minimal()
   
   if(!legend){
     g <- g + theme(legend.position = "none")
