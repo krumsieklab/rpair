@@ -1,7 +1,7 @@
 # type 'response' and 'class' not currenlty included
 # removed s and exact functionality
 # removed ...
-predict.rpair <- function(object, newx, type = c("link", 
+predict.rpair <- function(object, newx, s = NULL, type = c("link", 
                                                   "coefficients", "nonzero")){
   
   print("Hi! from predict.rpair!")
@@ -25,20 +25,20 @@ predict.rpair <- function(object, newx, type = c("link",
   
   nbeta = object$beta
   
-  # KC: remove s for now
-  # if (!is.null(s)) {
-  #   vnames = dimnames(nbeta)[[1]]
-  #   dimnames(nbeta) = list(NULL, NULL)
-  #   lambda = object$lambda
-  #   lamlist = lambda.interp(lambda, s)
-  #   nbeta = nbeta[, lamlist$left, drop = FALSE] %*% Diagonal(x = lamlist$frac) + 
-  #     nbeta[, lamlist$right, drop = FALSE] %*% Diagonal(x = 1 - 
-  #                                                         lamlist$frac)
-  #   namess = names(s)
-  #   if (is.null(namess)) 
-  #     namess = paste0("s", seq(along = s))
-  #   dimnames(nbeta) = list(vnames, namess)
-  # }
+  #KC: remove s for now
+  if (!is.null(s)) {
+    vnames = dimnames(nbeta)[[1]]
+    dimnames(nbeta) = list(NULL, NULL)
+    lambda = object$lambda
+    lamlist = glmnet:::lambda.interp(lambda, s)
+    nbeta = nbeta[, lamlist$left, drop = FALSE] %*% Diagonal(x = lamlist$frac) +
+      nbeta[, lamlist$right, drop = FALSE] %*% Diagonal(x = 1 -
+                                                          lamlist$frac)
+    namess = names(s)
+    if (is.null(namess))
+      namess = paste0("s", seq(along = s))
+    dimnames(nbeta) = list(vnames, namess)
+  }
   
   if (type == "coefficients") 
     return(nbeta)
