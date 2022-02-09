@@ -251,7 +251,7 @@ plognet <-
     outlist=c(outlist,list(npasses=fit$nlp, jerr=fit$jerr,dev.ratio=dev,nulldev=fit$nulldev))#,offset=is.offset))
     
     # class(outlist)="lognet"
-    class(outlist)="rpair"
+    class(outlist)=c("lognet","rpair")
     outlist
   }
 
@@ -321,7 +321,7 @@ pfishnet <-
     outlist=c(outlist,list(npasses=fit$nlp,jerr=fit$jerr,dev.ratio=dev,nulldev=fit$nulldev))#,offset=is.offset))
     
     # class(outlist)="fishnet"
-    class(outlist)="rpair"
+    class(outlist)=c("fishnet","rpair")
     outlist
   }
 
