@@ -63,7 +63,7 @@ cv.rpair.raw <- function(x, y, lambda, nlambda, type.measure, nfolds,
   rpair.object = rpair_gloss(x, y, lambda = lambda, nlambda = nlambda, ...)
   rpair.object$call = rpair.call
   subclass = class(rpair.object)[[1]]
-  type.measure = rpair.cvtype(type.measure, subclass)
+  #type.measure = rpair.cvtype(type.measure, subclass)
   
   nz = sapply(predict(rpair.object, type = "nonzero"), length)
   N = nrow(x)
@@ -88,31 +88,26 @@ cv.rpair.raw <- function(x, y, lambda, nlambda, type.measure, nfolds,
 }
 
 # if fraction return df with nlambda num cols - NAs for folds that
-#   don't have values beyond some nth lambda; if lambda, will return a df the length of lambda
+#   don't have values beyond some nth lambda; if lambda, will return dfs with ncols equal to length of lambda
 rpair.buildPredmat <- function(outlist, nlambda, lambda, x, foldid, alignment, ...){
-  if(alignment=="lambda"){
-    predmat = matrix(NA, nrow(x), length(lambda))
-    nlambda = length(lambda)
-  }else{
-    predmat = matrix(NA,nrow(x),nlambda)
-  }
+  if(alignment=="lambda") nlambda = length(lambda)
+  pred_list = list()
   nfolds = max(foldid)
   nlams = double(nfolds)
   for (i in seq(nfolds)) {
     which = foldid == i
     fitobj = outlist[[i]]
+    predmat = matrix(NA,nrow(x[which,]),nlambda)
     preds = switch(alignment, fraction = predict(fitobj, 
                                                  x[which, , drop = FALSE]), 
                    lambda = predict(fitobj, x[which, , drop = FALSE], 
                                     s = lambda))
     nlami = min(ncol(preds), nlambda)
-    predmat[which, seq(nlami)] = preds[, seq(nlami)]
-    # if (nlami < nlambda) 
-    #   predmat[which, seq(from = nlami, to = nlambda)] = preds[, 
-    #                                                           nlami]
+    predmat[, seq(nlami)] = preds[, seq(nlami)]
+    rn = rownames(x[which,])
+    sn = paste("s", seq(0, length = nlambda), sep = "")
+    dimnames(predmat) = list(rn, sn)
+    pred_list[[i]] = predmat
   }
-  rn = rownames(x)
-  sn = paste("s", seq(0, length = nlambda), sep = "")
-  dimnames(predmat) = list(rn, sn)
-  predmat
+  pred_list
 }
