@@ -3,6 +3,8 @@ library(survival)
 library(magrittr)
 library(glmnet)
 
+PATH_TO_INPUT = "~/Desktop/rppa_nods"
+
 setwd("~/rpair/")
 source("cv_funs_kelsey/cv_rpair.R")
 source("rpair_gloss.R")
@@ -10,10 +12,10 @@ source("rpair_loss_eval_funs.R")
 source("cv_funs_kelsey/ssvm_utils.R")
 source("utils_pairs.R")
 source("utils_repair.R")
-
+source("load_fortran.R")
 
 set.seed(42)
-load("cv_funs_kelsey/rppa_nods")
+load(PATH_TO_INPUT)
 # remove missing values
 dfnods = dfnods %>% lapply( na.omit)
 
