@@ -87,8 +87,33 @@ cv.rpair.raw <- function(x, y, lambda, nlambda, type.measure, nfolds,
   
 }
 
-# if fraction return df with nlambda num cols - NAs for folds that
-#   don't have values beyond some nth lambda; if lambda, will return dfs with ncols equal to length of lambda
+# # if fraction return df with nlambda num cols - NAs for folds that
+# #   don't have values beyond some nth lambda; if lambda, will return dfs with ncols equal to length of lambda
+# rpair.buildPredmat <- function(outlist, nlambda, lambda, x, foldid, alignment, ...){
+#   if(alignment=="lambda") nlambda = length(lambda)
+#   pred_list = list()
+#   nfolds = max(foldid)
+#   nlams = double(nfolds)
+#   for (i in seq(nfolds)) {
+#     which = foldid == i
+#     fitobj = outlist[[i]]
+#     predmat = matrix(NA,nrow(x[which,]),nlambda)
+#     preds = switch(alignment, fraction = predict(fitobj, 
+#                                                  x[which, , drop = FALSE]), 
+#                    lambda = predict(fitobj, x[which, , drop = FALSE], 
+#                                     s = lambda))
+#     nlami = min(ncol(preds), nlambda)
+#     predmat[, seq(nlami)] = preds[, seq(nlami)]
+#     rn = rownames(x[which,])
+#     sn = paste("s", seq(0, length = nlambda), sep = "")
+#     dimnames(predmat) = list(rn, sn)
+#     pred_list[[i]] = predmat
+#   }
+#   pred_list
+# }
+
+# I edited your implementation by deleting all .[x,], 
+# becasue I need prediction for all samples to be able to calculate Houwelingen cv
 rpair.buildPredmat <- function(outlist, nlambda, lambda, x, foldid, alignment, ...){
   if(alignment=="lambda") nlambda = length(lambda)
   pred_list = list()
@@ -97,14 +122,12 @@ rpair.buildPredmat <- function(outlist, nlambda, lambda, x, foldid, alignment, .
   for (i in seq(nfolds)) {
     which = foldid == i
     fitobj = outlist[[i]]
-    predmat = matrix(NA,nrow(x[which,]),nlambda)
-    preds = switch(alignment, fraction = predict(fitobj, 
-                                                 x[which, , drop = FALSE]), 
-                   lambda = predict(fitobj, x[which, , drop = FALSE], 
-                                    s = lambda))
+    predmat = matrix(NA,nrow(x),nlambda)
+    preds = switch(alignment, fraction = predict(fitobj, x), 
+                   lambda = predict(fitobj, x, s = lambda))
     nlami = min(ncol(preds), nlambda)
     predmat[, seq(nlami)] = preds[, seq(nlami)]
-    rn = rownames(x[which,])
+    rn = rownames(x)
     sn = paste("s", seq(0, length = nlambda), sep = "")
     dimnames(predmat) = list(rn, sn)
     pred_list[[i]] = predmat
