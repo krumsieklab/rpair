@@ -1,8 +1,19 @@
 
+# KC: should the values for these two functions be different?
+# glmnet result
+xh = get_riskset(Str) %*% xtr
+gtmp = glmnet( -xh, rep(0, nrow(xh)), family = "poisson", intercept = F, pmax = pmx, nlambda = k, alpha = alpha) 
+
+# rpair_gloss result
+rtmp = rpair_gloss(xtr, Str, loss_type = "exp", pmax = pmx, nlambda = k, alpha = alpha)
+
+
+
 
 srpoisson <- function(x, S, ...){
   xh = get_riskset(S) %*% x
   #cat(". ")
+  # KC: Why do you switch the sign on xh here?
   glmnet( -xh, rep(0, nrow(xh)), family = "poisson", intercept = F, ...) 
 } 
 
