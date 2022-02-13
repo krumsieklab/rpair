@@ -3,13 +3,16 @@ library(survival)
 library(magrittr)
 library(glmnet)
 
-setwd("~/Downloads/rstudio-export_kelsey/")
+# USER INPUT
+PATH_TO_INPUT = "~/Desktop/rppa_nods"
+
+setwd("~/rpair/cv_funs_kelsey/")
 source("fishnet.R")
 source("lognet.R")
 source("ssvm_utils.R")
 
 set.seed(42)
-load("rppa_nods")
+load(PATH_TO_INPUT)
 # remove missing values
 dfnods = dfnods %>% lapply( na.omit)
 
@@ -55,6 +58,8 @@ if(alpha < 0.5 ) pmx = ncol(x)+1
 
 # debug the two manually implemented cv functions
 pcv = cv.srpoisson(xtr, Str, fids,k = 25, type.measure = "deviance", alpha = alpha, pmx = pmx)
+kpcv = cv.rpair(xtr, Str, foldid=fids, nlambda=25, type.measure = "deviance", alpha = alpha, 
+                pmax = pmx, alignment = "fraction", keep = T)
 # fishnet line 20
 # Warning message:
 #  from glmnet Fortran code (error code -10018); Number of nonzero coefficients along the path exceeds pmax=56 
@@ -62,6 +67,8 @@ pcv = cv.srpoisson(xtr, Str, fids,k = 25, type.measure = "deviance", alpha = alp
 
 
 bcv = cv.srbinomial(xtr, Str, fids, k = 25, type.measure = "auc", alpha = alpha, pmx = pmx)
+kbcv = cv.rpair(xtr, Str, foldid=fids, type.measure = "auc", alpha = alpha, 
+                pmax = pmx, alignment = "fraction", nlambda = 25, keep = T)
 # lognet line 30
 #Warning messages:
 #  1: In lognet(xd, is.sparse, ix, jx, y, weights, offset, alpha, nobs,  :
@@ -69,3 +76,4 @@ bcv = cv.srbinomial(xtr, Str, fids, k = 25, type.measure = "auc", alpha = alpha,
 #  2: from glmnet Fortran code (error code -10019); Number of nonzero coefficients along the path exceeds pmax=56 
 #     at 19th lambda value; solutions for larger lambdas returned 
 
+cvp = cv.rpair(xtr, Str, foldid=fids, )
