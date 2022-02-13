@@ -134,3 +134,4 @@ rpair.buildPredmat <- function(outlist, nlambda, lambda, x, foldid, alignment, .
   }
   pred_list
 }
+}
