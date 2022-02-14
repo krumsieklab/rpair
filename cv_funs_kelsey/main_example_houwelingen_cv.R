@@ -5,6 +5,8 @@ library(survival)
 library(magrittr)
 library(glmnet)
 
+setwd("~/rpair/")
+
 source("cv_funs_kelsey/cv_rpair.R")
 source("rpair_gloss.R")
 source("rpair_loss_eval_funs.R")
@@ -45,7 +47,7 @@ pmx = min(ncol(x), sum(S[,2]))
 if(alpha < 0.5 ) pmx = ncol(x)+1
 loss_type = "exp" # "log"
 
-kpcv = cv.rpair(xtr, Str, foldid=fids, nlambda=25, type.measure = "deviance", alpha = alpha, 
+kpcv = cv_rpair(xtr, Str, foldid=fids, nlambda=25, type.measure = "deviance", alpha = alpha, 
                 pmax = pmx, alignment = "fraction", keep = T, loss_type = loss_type)
 
 

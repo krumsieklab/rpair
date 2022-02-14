@@ -58,9 +58,25 @@ fids = trinds[trinds>0]
 pmx = min(ncol(x), sum(S[,2]))
 if(alpha < 0.5 ) pmx = ncol(x)+1
 
+# exp loss
+kcv1 = cv_rpair(xtr, Str, foldid=fids, nlambda=25, type.measure = "deviance", alpha = alpha, 
+                pmax = pmx, alignment = "fraction", keep = T, loss_type="exp")
 
-kpcv = cv.rpair(xtr, Str, foldid=fids, nlambda=25, type.measure = "deviance", alpha = alpha, 
-                pmax = pmx, alignment = "fraction", keep = T)
+# log loss
+kcv2 = cv_rpair(xtr, Str, foldid=fids, type.measure = "deviance", alpha = alpha, 
+                pmax = pmx, alignment = "fraction", nlambda = 25, keep = T, loss_type="log")
 
-kbcv = cv.rpair(xtr, Str, foldid=fids, type.measure = "auc", alpha = alpha, 
-                pmax = pmx, alignment = "fraction", nlambda = 25, keep = T)
+# fold-ids missing
+kcv3 = cv_rpair(xtr, Str, nfolds = 5, type.measure = "deviance", alpha = alpha, 
+                pmax = pmx, alignment = "fraction", nlambda = 25, keep = T, loss_type="log")
+
+# alignment = lambda - this does not appear to be working correctly
+kcv4 = cv_rpair(xtr, Str, foldid = fids, type.measure = "deviance", alpha = alpha, 
+                pmax = pmx, alignment = "lambda", nlambda = 25, keep = T, loss_type="log")
+# all fit.preval dfs are equal entirely 0
+# gives thhese warning for every fold:
+#  - from glmnet Fortran code (error code -10001); Number of nonzero coefficients along the path exceeds pmax=56 at 
+#     1th lambda value; solutions for larger lambdas returned
+#  - In getcoef.glmnetfit(fit, nvars, nx, vnames) :
+#       an empty model has been returned; probably a convergence issue
+
