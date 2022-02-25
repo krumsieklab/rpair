@@ -1,42 +1,70 @@
-#' Fit GLM to Survival Analysis Data
+#' Fit GLM for pairwise survival ranking models
 #'
-#' ADD DESCRIPTION
+#' Fit a generalized linear model for pairwise survival ranking models using either logistic loss (concordance
+#' regression) or exponential loss. Uses a modified implementation of \link[glmnet]{glmnet}. Refer to glmnet
+#' documentation for further details.
 #'
-#' @param x Input matrix of dimension nobs x nvars; each row is an observation vector. # KC: features in cols?
-#' @param y 
-#' @param loss_type Loss function to use. One of c("log", "exp").
-#' @param alpha Default: 1.0 (lasso).
-#' @param nlambda Default: 100.
-#' @param lambda.min.ratio Default: ifelse(nobs0 <= nvars, 1e-2, 1e-4)
-#' @param lambda Default: NULL.
-#' @param standardize
-#' @param thresh
-#' @param dfmax
-#' @param pmax
-#' @param penalty.factor
-#' @param maxit
+#' @param x Input matrix of dimension nobs x nvars; each row is an observation vector.
+#' @param y Pairwise ranking analysis response variable. This function supports three types of input types:
+#'    (1) continuous values, (2) survival data, and (3) ranked pairs.
+#' @param loss_type Loss function to use. Equivalent to "family" in glmnet package. One of c("log", "exp").
+#' @param alpha The elasticnet mixing parameter. See \link[glmnet]{glmnet} for details. Default: 1.0 (lasso penalty).
+#' @param nlambda Number of lambda values to evaluate. Default: 100.
+#' @param lambda.min.ratio Smallest value for lambda as a fraction of lambda.max, the (data derived) entry value.
+#'   See \link[glmnet]{glmnet} for details. Default: ifelse(nobs0 <= nvars, 1e-2, 1e-4)
+#' @param lambda A user supplied lambda sequence. Overrides the typical usage in which a lambda sequence is computed
+#'    using nlambda and lambda.min.ratio. Provide a decreasing sequence of lambda values with at least 2 entries.
+#'    Default: NULL.
+#' @param standardize Logical flag for x variable standardization. Default: FALSE.
+#' @param thresh Convergence threshold for coordinate descent. Default: 1e-7.
+#' @param dfmax Limit the maximum number of variables in the model. Default: nvars+1.
+#' @param pmax Limit the maximum number of variables that can be nonzero. Default: min(dfmax*2+20, nvars).
+#' @param penalty.factor Vector of penalty factors to apply to each coefficient. Default: rep(1, nvars).
+#' @param maxit Maximum number of passes over the data for all lambda values. Default: 100000.
 #' @param type.logistic One of c("Newton", "modified.Newton"). If "Newton" then the exact hessian is used, while
 #'    "modified.Newton" uses an upper-bound on the hessian and can be faster. Default: "Newton".
+#'
+#' @return An object with S3 class "rpair", "*", where "*" is "lognet" or "fishnet". Contains the following
+#'    attributes:
+#'
+#' @examples
+#'fp<- function(S){
+#' time <- S[,1]
+#' status <- S[,2]
+#' N = length(time)
+#' # for tied times
+#' time[status == 0] = time[status == 0]+1e-4
+#' dtimes <- time
+#' dtimes[status == 0] = Inf
+#' which(outer(time, dtimes, ">"), arr.ind = T)
+#' }
+#' # generate some random data
+#' set.seed(41)
+#' x = matrix(rnorm(40000),ncol = 200 )
+#' S = cbind(sample(nrow(x)), rbinom(nrow(x),1,prob = 0.7))
+#' # generate pairs
+#' cp = fp(S)
+#' efit = rpair_gloss(x, cp, standardize = F, pmax = 50, loss_type = "exp")
+#' lfit = rpair_gloss(x, cp, standardize = F, pmax = 50, loss_type = "log")
 #'
 #' @author mubu, KC
 #'
 #' @export
 rpair_gloss<-
-  function( x, # data
-            y, # outcome
-            loss_type=c("log","exp"), # equivalent to 'family'
-            alpha=1.0, # yes
-            nlambda=100, # yes
-            lambda.min.ratio=ifelse(nobs0 <= nvars,1e-2,1e-4), # yes
-            lambda=NULL, # yes
-            standardize=FALSE, # maybe
-            thresh=1e-7, # yes
-            dfmax=nvars+1, #yes
-            pmax=min(dfmax*2+20,nvars), # yes
-            penalty.factor=rep(1,nvars), # yes
-            maxit=100000, # yes
-            type.logistic=c("Newton","modified.Newton")#, # yes
-            #trace.it = 0 # LEAVE OUT FOR NOW
+  function( x,
+            y,
+            loss_type=c("log","exp"),
+            alpha=1.0,
+            nlambda=100,
+            lambda.min.ratio=ifelse(nobs0 <= nvars,1e-2,1e-4),
+            lambda=NULL,
+            standardize=FALSE,
+            thresh=1e-7,
+            dfmax=nvars+1,
+            pmax=min(dfmax*2+20,nvars),
+            penalty.factor=rep(1,nvars),
+            maxit=100000,
+            type.logistic=c("Newton","modified.Newton")
   ){
 
     # previously user-defined variables - for now not supporting the ability for user to set them
@@ -45,11 +73,11 @@ rpair_gloss<-
     exclude=integer(0)
     lower.limits=-Inf
     upper.limits=Inf
-    
+
     nobs0 = nrow(x)
     cp = y_to_pairs(y)
     ncp = nrow(cp)
-    
+
     ### Prepare all the generic arguments, then hand off to loss_type functions
     loss_type=match.arg(loss_type)
     if(alpha>1){
@@ -61,18 +89,18 @@ rpair_gloss<-
       alpha=0
     }
     alpha=as.double(alpha)
-    
+
     this.call=match.call()
     nlam=as.integer(nlambda)
     np=c(ncp,ncol(x))
-    
+
     ###check dims
     if(is.null(np)|(np[2]<=1))stop("x should be a matrix with 2 or more columns")
     nobs=as.integer(np[1])
     nvars=as.integer(np[2])
-    
+
     weights=rep(1,nobs)
-    
+
     vnames=colnames(x)
     if(is.null(vnames))vnames=paste("V",seq(nvars),sep="")
     ne=as.integer(dfmax)
@@ -88,7 +116,7 @@ rpair_gloss<-
       jd=as.integer(c(length(jd),jd))
     }else jd=as.integer(0)
     vp=as.double(penalty.factor)
-    
+
     # -- here will need special treatment later
     ###check on limits
     if(any(lower.limits>0)){stop("Lower limits should be non-positive")}
@@ -120,10 +148,10 @@ rpair_gloss<-
     ### end check on limits
     # glmnet.control function injects parameters into fortran code
     # fix this at the end if there is time
-    
+
     isd=as.integer(standardize)
     thresh=as.double(thresh)
-    
+
     if(is.null(lambda)){
       if(lambda.min.ratio>=1)stop("lambda.min.ratio should be less than 1")
       flmin=as.double(lambda.min.ratio)
@@ -135,74 +163,75 @@ rpair_gloss<-
       ulam=as.double(rev(sort(lambda)))
       nlam=as.integer(length(lambda))
     }
-    
+
     kopt=switch(match.arg(type.logistic),
                 "Newton"=0,#This means to use the exact Hessian
                 "modified.Newton"=1 # Use the upper bound
     )
     kopt=as.integer(kopt)
-    
+
     fit <-
       switch(loss_type,
-             log = plognet(x,cp,weights,alpha,nobs,nvars,jd,vp,cl,ne,nx,nlam,flmin,ulam,thresh,isd,vnames,maxit,kopt),
-             exp = pfishnet(x,cp,weights,alpha,nobs,nvars,jd,vp,cl,ne,nx,nlam,flmin,ulam,thresh,isd, vnames,maxit))
-    
-    
-    if(is.null(lambda))fit$lambda=fix_lam(fit$lambda) #glmnet:::fix.lam(fit$lambda)##first lambda is infinity; changed to entry point
+             log = plognetfit(x,cp,weights,alpha,nobs,nvars,jd,vp,cl,ne,nx,nlam,flmin,ulam,thresh,isd,vnames,maxit,kopt),
+             exp = pfishnetfit(x,cp,weights,alpha,nobs,nvars,jd,vp,cl,ne,nx,nlam,flmin,ulam,thresh,isd, vnames,maxit))
+
+
+    if(is.null(lambda))fit$lambda=fix_lam(fit$lambda)
     fit$call=this.call
     fit$loss=loss_type
     fit$nobs=nobs
-    
-    class(fit)=c(class(fit),"glmnet")
+
+    class(fit)=c(class(fit),"rpair")
     fit
   }
 
 
 #' Logistic Loss (Concordance Regression) Function
 #'
+#' Helper function to call the Fortran implemented logistic loss (concordance regression) algorithm.
 #'
-#' @param x
-#' @param cp
-#' @param weights
-#' @param alpha
-#' @param nobs
-#' @param nvars
-#' @param jd
-#' @param vp
-#' @param cl
-#' @param ne
-#' @param nx
-#' @param nlam
-#' @param flmin
-#' @param ulam
-#' @param thresh
-#' @param isd
-#' @param vnames
-#' @param maxit
-#' @param kopt
-#' @param rk
+#' @param x Input matrix of dimension nobs x nvars; each row is an observation vector.
+#' @param cp Survival data outcome as comparable pairs.
+#' @param weights Observation weights. Currently only supports 1 for each observation.
+#' @param alpha Elasticnet mixing parameter (between 0-1).
+#' @param nobs Number of samples (first dimension of x matrix).
+#' @param nvars Number of features (second dimension of x matrix).
+#' @param jd A vector of features to be excluded.
+#' @param vp Vector of penalty factors to apply to each coefficient.
+#' @param cl A matrix of lower and upper limit values for each coefficient.
+#' @param ne Limit the maximum number of variables in the model.
+#' @param nx Limit the maximum number of variables that can be nonzero.
+#' @param nlam Number of lambda values to evaluate.
+#' @param flmin If lambda sequence not provided, this is the lambda.min.ratio. If it is, then it is equal to 1.
+#' @param ulam If provided, this is the user lambda sequence. If not, this is 1.
+#' @param thresh Convergence threshold for coordinate descent.
+#' @param isd Integer value for rpair_gloss 'standardize' argument.
+#' @param vnames Column names of the input matrix.
+#' @param maxit Maximum number of passes over the data for all lambda values.
+#' @param kopt Integer value of type.logistic - 0 for Newton, 1 for modified.Newton.
+#' @param rk Half the number of pairs.
+#'
+#' @author mubu, KC
 #'
 #' @noRd
-plognet <-
+plognetfit <-
   function( x,cp,weights,
             alpha,nobs,nvars,jd,vp,cl,ne,nx,nlam,flmin,ulam,thresh,isd,
             vnames,maxit,kopt, rk = nrow(cp)%/%2
   ){
-    # print("HELLO")
     # modify cp accordingly
     cp = rbind( cp[1:rk,2:1], cp[-(1:rk),])
     y = c(rep(1,rk),rep(0, nrow(cp)-rk))
     y = cbind(c0=1-y, c1 =y)
     # ---
-    
+
     maxit=as.integer(maxit)
     nc=2
-    #y=diag(nc)[as.numeric(y),]
     #Check for size limitations
     maxvars=.Machine$integer.max/(nlam*nc)
     if(nx>maxvars)
       stop(paste("Integer overflow; 2*num_lambda*pmax should not exceed .Machine$integer.max. Reduce pmax to be below", trunc(maxvars)))
-    
+
     if(!missing(weights)) y=y*weights
     ### check if any rows of y sum to zero, and if so deal with them
     weights=drop(y%*%rep(1,nc))
@@ -212,16 +241,13 @@ plognet <-
       x=x[o,,drop=FALSE]
       nobs=sum(o)
     }else o=NULL
-    
-    #loss_type="log"
+
     nc=as.integer(1) # for calling lognet
-    y=y[,c(2,1)]#fortran lognet models the first column; we prefer the second (for 0/1 data)
-    
+    y=y[,c(2,1)] #fortran lognet models the first column; we prefer the second (for 0/1 data)
+
     storage.mode(y)="double"
-    # KC: removed the ability of user to set offset - can get rid of is.offset?
     offset=y*0 #keeps the shape of y
-    #is.offset=FALSE
-    
+
     fit <- .Fortran( "plognet",
                      parm=alpha,nrow(x),nvars,nc,as.double(x),y,offset,jd,vp,cl,ne,nx,nlam,flmin,ulam,thresh,isd,maxit,kopt,
                      lmu=integer(1),
@@ -237,20 +263,19 @@ plognet <-
                      jerr=integer(1)
     )
     class(fit) = c("glmnetfit",class(fit))
-    
+
     if(fit$jerr!=0){
-      errmsg=jerr(fit,maxit,pmax=nx,"log") #glmnet::jerr(fit$jerr,maxit,pmax=nx,"binomial")
+      errmsg=jerr(fit,maxit,pmax=nx,"log")
       if(errmsg$fatal)stop(errmsg$msg,call.=FALSE)
       else warning(errmsg$msg,call.=FALSE)
     }
-    
+
     outlist=getcoef(fit,nvars,nx,vnames)
-    
+
     dev=fit$dev[seq(fit$lmu)]
     # KC: add 'type' to this list
-    outlist=c(outlist,list(npasses=fit$nlp, jerr=fit$jerr,dev.ratio=dev,nulldev=fit$nulldev))#,offset=is.offset))
-    
-    # class(outlist)="lognet"
+    outlist=c(outlist,list(npasses=fit$nlp, jerr=fit$jerr,dev.ratio=dev,nulldev=fit$nulldev))
+
     class(outlist)=c("lognet","rpair")
     outlist
   }
@@ -258,30 +283,33 @@ plognet <-
 
 #' Exponential Loss Function
 #'
+#' Helper function to call the Fortran implemented exponential loss algorithm.
 #'
-#' @param x
-#' @param cp
-#' @param weights
-#' @param alpha
-#' @param nobs
-#' @param nvars
-#' @param jd
-#' @param vp
-#' @param cl
-#' @param ne
-#' @param nx
-#' @param nlam
-#' @param flmin
-#' @param ulam
-#' @param thresh
-#' @param isd
-#' @param vnames
-#' @param maxit
-#' @param kopt
-#' @param rk
+#' @param x Input matrix of dimension nobs x nvars; each row is an observation vector.
+#' @param cp Comparable pairs of the form: two column matrix in which numbers correspond to sample indices;
+#'   each row is a pair in which the sample in the left hand column has a greater survival time than the sample in
+#'   the right hand column.
+#' @param weights Observation weights. Currently only supports 1 for each observation.
+#' @param alpha Elasticnet mixing parameter (between 0-1).
+#' @param nobs Number of samples (first dimension of x matrix).
+#' @param nvars Number of features (second dimension of x matrix).
+#' @param jd A vector of features to be excluded.
+#' @param vp Vector of penalty factors to apply to each coefficient.
+#' @param cl A matrix of lower and upper limit values for each coefficient.
+#' @param ne Limit the maximum number of variables in the model.
+#' @param nx Limit the maximum number of variables that can be nonzero.
+#' @param nlam Number of lambda values to evaluate.
+#' @param flmin If lambda sequence not provided, this is the lambda.min.ratio. If it is, then it is equal to 1.
+#' @param ulam If provided, this is the user lambda sequence. If not, this is 1.
+#' @param thresh Convergence threshold for coordinate descent.
+#' @param isd Integer value for rpair_gloss 'standardize' argument.
+#' @param vnames Column names of the input matrix.
+#' @param maxit Maximum number of passes over the data for all lambda values.
+#'
+#' @author mubu, KC
 #'
 #' @noRd
-pfishnet <-
+pfishnetfit <-
   function( x,cp, weights,
             alpha,nobs,nvars,jd,vp,cl,ne,nx,nlam,flmin,ulam,thresh,isd,
             vnames,maxit
@@ -290,8 +318,7 @@ pfishnet <-
     maxit=as.integer(maxit)
     weights=as.double(weights)
     offset=double(nrow(cp)) #keeps the shape of y
-    
-    #loss_type="exp"
+
     fit <- .Fortran( "pfishnet",
                      parm=alpha,nrow(x),nvars,as.double(x),#y,
                      offset,weights,jd,vp,cl,ne,nx,nlam,flmin,ulam,thresh,isd,#intr,
@@ -309,18 +336,17 @@ pfishnet <-
                      jerr=integer(1)
     )
     class(fit) = c("glmnetfit",class(fit))
-    
+
     if(fit$jerr!=0){
       errmsg=jerr(fit,maxit,pmax=nx,"exp")
       if(errmsg$fatal)stop(errmsg$msg,call.=FALSE)
       else warning(errmsg$msg,call.=FALSE)
     }
-    
-    outlist=getcoef(fit,nvars,nx,vnames) #glmnet::getcoef(fit,nvars,nx,vnames)
+
+    outlist=getcoef(fit,nvars,nx,vnames)
     dev=fit$dev[seq(fit$lmu)]
     outlist=c(outlist,list(npasses=fit$nlp,jerr=fit$jerr,dev.ratio=dev,nulldev=fit$nulldev))#,offset=is.offset))
-    
-    # class(outlist)="fishnet"
+
     class(outlist)=c("fishnet","rpair")
     outlist
   }
