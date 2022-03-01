@@ -60,39 +60,38 @@ jerr.glmnetfit <- function(fit, maxit, pmax, loss_type){
 }
 
 # hinge loss - optimizer (gcdnet)
-# not used for now
-# jerr.gcdnetfit <- function(fit, maxit, pmax, loss_type){
-#
-#   n = fit$jerr
-#   # gcdnet errors
-#   if (n == 0)
-#     msg <- ""
-#   if (n > 0) {
-#     if (n < 7777)
-#       msg <- "Memory allocation error"
-#     if (n == 7777)
-#       msg <- "All used predictors have zero variance"
-#     if (n == 10000)
-#       msg <- "All penalty factors are <= 0"
-#     n <- 1
-#     msg <- paste("in gcdnet fortran code -", msg)
-#   }
-#   if (n < 0) {
-#     if (n > -10000)
-#       msg <- paste("Convergence for ", -n, "th lambda value not reached after maxit=",
-#                    maxit, " iterations; solutions for larger lambdas returned",
-#                    sep = "")
-#     if (n < -10000)
-#       msg <- paste("Number of nonzero coefficients along the path exceeds pmax=",
-#                    pmax, " at ", -n - 10000, "th lambda value; solutions for larger lambdas returned",
-#                    sep = "")
-#     n <- -1
-#     msg <- paste("from gcdnet fortran code -", msg)
-#   }
-#
-#   list(n = n, msg = msg)
-#
-# }
+jerr.gcdnetfit <- function(fit, maxit, pmax, loss_type){
+
+  n = fit$jerr
+  # gcdnet errors
+  if (n == 0)
+    msg <- ""
+  if (n > 0) {
+    if (n < 7777)
+      msg <- "Memory allocation error"
+    if (n == 7777)
+      msg <- "All used predictors have zero variance"
+    if (n == 10000)
+      msg <- "All penalty factors are <= 0"
+    n <- 1
+    msg <- paste("in gcdnet fortran code -", msg)
+  }
+  if (n < 0) {
+    if (n > -10000)
+      msg <- paste("Convergence for ", -n, "th lambda value not reached after maxit=",
+                   maxit, " iterations; solutions for larger lambdas returned",
+                   sep = "")
+    if (n < -10000)
+      msg <- paste("Number of nonzero coefficients along the path exceeds pmax=",
+                   pmax, " at ", -n - 10000, "th lambda value; solutions for larger lambdas returned",
+                   sep = "")
+    n <- -1
+    msg <- paste("from gcdnet fortran code -", msg)
+  }
+
+  list(n = n, msg = msg)
+
+}
 
 # used in reapir_gloss
 fix_lam<- function (lam) {
@@ -138,47 +137,47 @@ getcoef.glmnetfit <- function (fit, nvars, pmax, vnames) {
 }
 
 # hinge loss - optimizer (gcdnet)
-# not used for now
-# getcoef.gcdnetfit <- function (fit, nvars, pmax, vnames) { #maxit,
-#
-#   nalam <- fit$nalam
-#   nbeta <- fit$nbeta[seq(nalam)]
-#   nbetamax <- max(nbeta)
-#   lam <- fit$alam[seq(nalam)]
-#   stepnames <- paste("s", seq(nalam) - 1, sep = "")
-#
-#   # errmsg <- err(fit$jerr, maxit, pmax)
-#   #
-#   # switch(paste(errmsg$n),
-#   #        `1` = stop(errmsg$msg, call. = FALSE),
-#   #        `-1` = print(errmsg$msg, call. = FALSE))
-#   #
-#
-#
-#   dd <- c(nvars, nalam)
-#   if (nbetamax > 0) {
-#     beta <- matrix(fit$beta[seq(pmax * nalam)], pmax, nalam)[seq(nbetamax), , drop = FALSE]
-#
-#     df <- apply(abs(beta) > 0, 2, sum)
-#     ja <- fit$ibeta[seq(nbetamax)]
-#     oja <- order(ja)
-#     ja <- rep(ja[oja], nalam)
-#     ibeta <- cumsum(c(1, rep(nbetamax, nalam)))
-#     beta <- new("dgCMatrix",
-#                 Dim = dd,
-#                 Dimnames = list(vnames, stepnames),
-#                 x = as.vector(beta[oja, ]),
-#                 p = as.integer(ibeta - 1),
-#                 i = as.integer(ja - 1))
-#   }
-#   else {
-#     beta <- zeromat(nvars, nalam, vnames, stepnames)
-#     df <- rep(0, nalam)
-#   }
-#
-#   list( beta = beta, df = df, dim = dd, lambda = lam)
-# }
-#
+getcoef.gcdnetfit <- function (fit, nvars, pmax, vnames) { #maxit,
+
+  nalam <- fit$nalam
+  nbeta <- fit$nbeta[seq(nalam)]
+  nbetamax <- max(nbeta)
+  lam <- fit$alam[seq(nalam)]
+  stepnames <- paste("s", seq(nalam) - 1, sep = "")
+
+  # errmsg <- err(fit$jerr, maxit, pmax)
+  #
+  # switch(paste(errmsg$n),
+  #        `1` = stop(errmsg$msg, call. = FALSE),
+  #        `-1` = print(errmsg$msg, call. = FALSE))
+  #
+
+
+  dd <- c(nvars, nalam)
+  if (nbetamax > 0) {
+    beta <- matrix(fit$beta[seq(pmax * nalam)], pmax, nalam)[seq(nbetamax), , drop = FALSE]
+
+    df <- apply(abs(beta) > 0, 2, sum)
+    ja <- fit$ibeta[seq(nbetamax)]
+    oja <- order(ja)
+    ja <- rep(ja[oja], nalam)
+    ibeta <- cumsum(c(1, rep(nbetamax, nalam)))
+    beta <- new("dgCMatrix",
+                Dim = dd,
+                Dimnames = list(vnames, stepnames),
+                x = as.vector(beta[oja, ]),
+                p = as.integer(ibeta - 1),
+                i = as.integer(ja - 1))
+  }
+  else {
+    beta <- zeromat(nvars, nalam, vnames, stepnames)
+    df <- rep(0, nalam)
+  }
+
+  list( beta = beta, df = df, dim = dd, lambda = lam)
+}
+
+
 # # not used
 # zeromat <- function (nvars, nalam, vnames, stepnames) {
 #   ca <- rep(0, nalam)

@@ -32,7 +32,9 @@ rpair_cvtype <- function(type.measure, losstype){
   if(type.measure=="deviance"){
     type.measure = losstype
     names(type.measure) = switch(losstype, lognet = "Log Loss",
-                                 fishnet = "Exponential Loss")
+                                 fishnet = "Exponential Loss",
+                                 phuhnet = "Huberized Hinge Loss",
+                                 psqhnet = "Squared Hinge Loss")
   }else{
     names(type.measure) <- "C-Index"
   }
@@ -79,10 +81,12 @@ rpair_buildPredmat <- function(outlist, nlambda, lambda, x, foldid, alignment){
 
 exp_loss <- function(x) exp(x)
 log_loss <- function(x) log(1+exp(x))
+huh_loss <- function(x, delta) ((1 - -1*x - 0.5 * delta) * (-1*x <= 1 - delta) + 0.5 * (1 - -1*x)^2/delta * (-1*x <= 1) * (-1*x > 1 - delta) )
+sqh_loss <- function(x) ((x >= 0) * (1+x)^2 )
 #conc_loss <- function(x) 1*(x<0)
 
-cv_loss <- function(predmat, pi_all, type_measure, fids){
-  ffs <- list(fishnet = exp_loss, lognet = log_loss)#, cindex = conc_loss)
+cv_loss <- function(predmat, pi_all, type_measure, fids, delta){
+  ffs <- list(fishnet = exp_loss, lognet = log_loss, phuhnet = huh_loss, psqhnet = sqh_loss)#, cindex = conc_loss)
 
   lo =
     sapply(seq(unique(fids)), function(i){
@@ -104,7 +108,11 @@ cv_loss <- function(predmat, pi_all, type_measure, fids){
 
       # for each lambda calculate deviance for fold i
       # colMeans(exp_loss(Z),na.rm = T)
-      colMeans( ff(Z), na.rm = T )
+      if(type_measure != "phuhnet"){
+        colMeans( ff(Z), na.rm = T )
+      }else{
+        colMeans( ff(Z, delta), na.rm = T )
+      }
     })
 
   lo

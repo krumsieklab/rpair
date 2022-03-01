@@ -2,11 +2,12 @@
 % Please edit documentation in R/cv_rpair.R
 \name{cv_rpair}
 \alias{cv_rpair}
-\title{Cross-Validation function for rpair_gloss}
+\title{Cross-Validation function for rpair_gloss and rpair_hinge.}
 \usage{
 cv_rpair(
   x,
   y,
+  loss_type = c("log", "exp", "sqh", "huh"),
   lambda = NULL,
   nlambda = 100,
   type.measure = c("deviance", "cindex"),
@@ -19,9 +20,11 @@ cv_rpair(
 )
 }
 \arguments{
-\item{x}{Input matrix as in rpair_gloss.}
+\item{x}{Input matrix as in rpair_gloss and rpair_hinge.}
 
-\item{y}{Response as in rpair_gloss.}
+\item{y}{Response as in rpair_gloss and rpair_hinge.}
+
+\item{loss_type}{Loss function to use. One of c("log", "exp ,"sqh", "huh").}
 
 \item{nlambda}{Number of lambda values. Default: 100.}
 
@@ -29,18 +32,21 @@ cv_rpair(
 
 \item{nfolds}{Number of folds. Default: 10.}
 
-\item{alignment}{Determines}
+\item{alignment}{Determines whether to use the lambda values computed on the master fit to line up the data
+on each fold ("lambda", default) or if the predictions in each fold are are aligned according to the fraction
+of progress along each fold ("fraction"). See \link[glmnet]{cv.glmnet} for details.
+One of c("lambda", "fraction"). Default: "lambda".}
 
 \item{grouped}{Not implemented in this version. Default: FALSE.}
 
 \item{keep}{If keep=TRUE, returns a list of fitted values for each fold and a corresponding list of foldids.
 Default: FALSE.}
 
-\item{\dots}{Additional parameters to pass to the rpair_gloss function.}
+\item{\dots}{Additional parameters to pass to the rpair_gloss or rpair_hinge function.}
 }
 \value{
 An object of class "cv_rpair" containing the following list of values:
 }
 \description{
-Performs k-fold cross-validation for rpair_gloss.
+Performs k-fold cross-validation for rpair_gloss or rpair_hinge.
 }
