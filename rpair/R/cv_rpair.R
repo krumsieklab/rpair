@@ -112,7 +112,7 @@ cv_rpair_raw <- function(x, y, loss_type, lambda, nlambda, type.measure, nfolds,
     # folds, not fold ids
     z = unlist( lapply(seq(predmat), function(i) rep(i, nrow(predmat[[i]]))) )
     # inds of training sets
-    ii = unlist(lapply(seq(predmat), function(i) fids != i))
+    ii = unlist(lapply(seq(predmat), function(i) foldid != i))
     # S for each fold
     Sf = rep(y, length(predmat))
     cvfl = apply(Yh, 2, function(yh)

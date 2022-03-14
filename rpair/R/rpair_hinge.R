@@ -23,9 +23,9 @@
 #' @param dfmax Limit the maximum number of variables in the model. Default: nvars+1.
 #' @param pmax Limit the maximum number of variables that can be nonzero. Default: min(dfmax*2+20, nvars).
 #' @param standardize Logical flag for x variable standardization. Default: FALSE.
-#' @param eps Convergence threshold for coordinate descent. Default: 1e-08.
-#' @param maxit Maximum number of passes over the data for all lambda values. Default: 1e+06
-#' @param delta The parameter delta in the HHSVM model. Must be greater than 0. Default: 2.
+#' @param eps Convergence threshold for coordinate descent. Default: 1e-06.
+#' @param maxit Maximum number of passes over the data for all lambda values. Default: 1e+05
+#' @param delta The parameter delta in the HHSVM model. Must be greater than 0. Default: 3.
 #'
 #' @return An object with S3 class "rpair", "*", where "*" is "psqhnet" or "phuhnet". Contains the following
 #'    attributes:
@@ -45,9 +45,9 @@ rpair_hinge <- function(x,
                         dfmax = nvars + 1,
                         pmax = min(dfmax * 1.2, nvars),
                         standardize = FALSE,
-                        eps = 1e-08,
-                        maxit = 1e+06,
-                        delta = 2
+                        eps = 1e-06,
+                        maxit = 1e+05,
+                        delta = 3
   ){
 
     loss_type <- match.arg(loss_type)
