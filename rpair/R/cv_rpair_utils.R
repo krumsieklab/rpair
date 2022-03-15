@@ -43,7 +43,9 @@ rpair_cvtype <- function(type.measure, losstype){
 
 getopt_cv_rpair <- function (lambda, cvm, cvsd, cvname)
 {
-  if (match(cvname, "cindex", 0)) cvm = -cvm
+  cvm = cvm[!is.na(lambda)]
+  cvsd = cvsd[!is.na(lambda)]
+  if (match(cvname, "C-Index", 0)) cvm = -cvm
   cvmin = min(cvm, na.rm = TRUE)
   idmin = cvm <= cvmin
   lambda.min = max(lambda[idmin], na.rm = TRUE)
