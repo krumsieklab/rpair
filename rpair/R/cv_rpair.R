@@ -87,14 +87,16 @@ cv_rpair_raw <- function(x, y, loss_type, lambda, nlambda, type.measure, nfolds,
   if(alignment=="lambda") lambda = rpair.object$lambda
   nz = sapply(predict(rpair.object, type = "nonzero"),
               length)
+  print(foldid)
+  seqfolds <- seq(max(foldid))
   outlist <- switch(loss_type,
-                    log = lapply( seq(max(foldid)), function(i)
+                    log = lapply( seqfolds, function(i)
                       rpair_gloss(x[foldid != i,], y[foldid != i,], lambda = lambda, nlambda = nlambda, ...)),
-                    exp = lapply( seq(max(foldid)), function(i)
+                    exp = lapply( seqfolds, function(i)
                       rpair_gloss(x[foldid != i,], y[foldid != i,], lambda = lambda, nlambda = nlambda, ...)),
-                    sqh = lapply( seq(max(foldid)), function(i)
+                    sqh = lapply( seqfolds, function(i)
                       rpair_hinge(x[foldid != i,], y[foldid != i,], lambda = lambda, nlambda = nlambda, ...)),
-                    huh = lapply( seq(max(foldid)), function(i)
+                    huh = lapply( seqfolds, function(i)
                       rpair_hinge(x[foldid != i,], y[foldid != i,], lambda = lambda, nlambda = nlambda, ...)))
 
 

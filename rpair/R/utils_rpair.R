@@ -178,15 +178,14 @@ getcoef.gcdnetfit <- function (fit, nvars, pmax, vnames) { #maxit,
 }
 
 
-# # not used
-# zeromat <- function (nvars, nalam, vnames, stepnames) {
-#   ca <- rep(0, nalam)
-#   ia <- seq(nalam + 1)
-#   ja <- rep(1, nalam)
-#   dd <- c(nvars, nalam)
-#   new("dgCMatrix", Dim = dd, Dimnames = list(vnames, stepnames),
-#       x = as.vector(ca), p = as.integer(ia - 1), i = as.integer(ja - 1))
-# }
+zeromat <- function (nvars, nalam, vnames, stepnames) {
+  ca <- rep(0, nalam)
+  ia <- seq(nalam + 1)
+  ja <- rep(1, nalam)
+  dd <- c(nvars, nalam)
+  new("dgCMatrix", Dim = dd, Dimnames = list(vnames, stepnames),
+      x = as.vector(ca), p = as.integer(ia - 1), i = as.integer(ja - 1))
+}
 #
 # # not used
 # getmin <- function (lambda, cvm, cvsd) {
@@ -200,3 +199,4 @@ getcoef.gcdnetfit <- function (fit, nvars, pmax, vnames) { #maxit,
 #   list(lambda.min = lambda.min, lambda.1se = lambda.1se)
 # }
 #
+

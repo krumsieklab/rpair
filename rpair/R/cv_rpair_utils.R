@@ -6,7 +6,14 @@ get_stratified_folds <- function(S, nfolds){
   eventlist <- split(sorted, f=sorted$status)
   fold_df_list <- lapply(eventlist, create_fold_splits, nfolds)
   fold_df <- do.call(rbind.data.frame,fold_df_list)
-  fold_df[is.na(fold_df$fold),"fold"] <- sample(seq(1:nfolds))[1:sum(is.na(fold_df$fold))]
+
+  # handle indices with unassigned folds
+  nas <- sum(is.na(fold_df$fold))
+  if(nas <= nfolds){
+    fold_df[is.na(fold_df$fold),"fold"] <- sample(seq(1:nfolds))[1:nas]
+  }else{
+    fold_df[is.na(fold_df$fold),"fold"] <- sample(seq(1:nfolds), size=nas, replace = T)
+  }
   strat_folds <- merge(sorted, fold_df, by="index")
   strat_folds
 }
