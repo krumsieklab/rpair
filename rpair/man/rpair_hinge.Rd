@@ -17,9 +17,9 @@ rpair_hinge(
   dfmax = nvars + 1,
   pmax = min(dfmax * 1.2, nvars),
   standardize = FALSE,
-  eps = 1e-08,
-  maxit = 1e+06,
-  delta = 2
+  eps = 1e-06,
+  maxit = 1e+05,
+  delta = 3
 )
 }
 \arguments{
@@ -54,11 +54,11 @@ Default: NULL.}
 
 \item{standardize}{Logical flag for x variable standardization. Default: FALSE.}
 
-\item{eps}{Convergence threshold for coordinate descent. Default: 1e-08.}
+\item{eps}{Convergence threshold for coordinate descent. Default: 1e-06.}
 
-\item{maxit}{Maximum number of passes over the data for all lambda values. Default: 1e+06}
+\item{maxit}{Maximum number of passes over the data for all lambda values. Default: 1e+05}
 
-\item{delta}{The parameter delta in the HHSVM model. Must be greater than 0. Default: 2.}
+\item{delta}{The parameter delta in the HHSVM model. Must be greater than 0. Default: 3.}
 }
 \value{
 An object with S3 class "rpair", "*", where "*" is "psqhnet" or "phuhnet". Contains the following
