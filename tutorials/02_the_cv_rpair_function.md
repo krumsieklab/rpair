@@ -3,8 +3,7 @@ Tutorial 2: the cv_rpair function
 
 This tutorial demonstrates how to use the cv_rpair function and its utility functions. The cv_rpair function performs
 k-fold cross-validation of the rpair function. The cv_rpair functions supports two kinds of input: survival and continuous. Like rpair, cv_rpair has three corresponding utility functions: predict, coef, and plot. 
-Two important parameters that are featured in this tutorial are type.measure and alignment. The type.measure parameter allows  the user to select which loss function to use for cross-validation - "deviance" (default) or "cindex". Selecting "deviance" uses the selected loss function itself (e.g. exponential loss) while selecting "cindex" uses an implementation of  
-The alignment parameter determines whether to use the lambda values computed on the master fit to line up the data on each fold ("lambda", default) or if the predictions in each fold are aligned according to the fraction of progress along each fold ("fraction").
+An important parameter featured in this tutorial is type.measure. The type.measure parameter allows  the user to select which loss function to use for cross-validation - "deviance" (default) or "cindex". Selecting "deviance" uses the selected loss function itself (e.g. exponential loss) while selecting "cindex" uses the concordance measure.
 
 ``` r
 library(rpair)
@@ -58,7 +57,6 @@ S[1:5,]
     [1] 0.2499683  7.2891822  2.3499586  1.6015316+ 1.2846922 
 
 ## type.measure = "deviance"
-### alignment = "fraction"
 ```r
 efit = cv_rpair(x, S, foldid=fids, nlambda=25, type.measure = "deviance", alpha = alpha,
                 pmax = pmx, alignment = "fraction", keep = T, loss_type="exp")
@@ -68,7 +66,7 @@ plot(efit)
 <img src="imgs/cv_efit_plot.png" width="665" height="455" />
 
 ```r
-epred = predict(efit, newx = xtr, s="lambda.min")
+epred = predict(efit, newx = x, s="lambda.min")
 epred[1:5]
 ```
     [1]  2.0677687 -2.9669107 -1.0780859 -1.3149500 -0.5849274
@@ -79,16 +77,16 @@ ec[1:5]
 ```
     [1] -0.33103864 -0.09459406  0.00000000  0.00000000 -0.03626532
 
-### alignment = "lambda"
 ```r
 hfit = cv_rpair(x, S, loss_type="huh", foldid=fids, nlambda=25, type.measure = "deviance",
-                pmax = pmx, alignment = "lambda", keep = T)
+                pmax = pmx, keep = T, alignment="lambda")
 plot(hfit, ggplot=F)
 ```
+
 <img src="imgs/cv_hfit_plot.png" width="665" height="455" />
 
 ```r
-hpred = predict(hfit, xtr, s="lambda.1se")
+hpred = predict(hfit, x, s="lambda.1se")
 hpred[1:5]
 ```
     [1]  0.4348660 -0.8906891 -0.3107375 -0.4157110 -0.1552527
@@ -98,8 +96,8 @@ hc = coef(hfit, s="lambda.min")
 hc[1:5]
 ```
     [1] -0.20607811 -0.11598244  0.00000000 -0.02551350 -0.06373397
+
 ## type.measure = "cindex"
-### alignment = "fraction"
 ```r
 sfit = cv_rpair(x, S, loss_type="sqh", nlambda=25, type.measure="cindex", alignment="fraction")
 plot(sfit, ggplot=F)
@@ -108,33 +106,32 @@ plot(sfit, ggplot=F)
 <img src="imgs/cv_sfit_plot.png" width="665" height="455" />
 
 ```r
-spred = predict(sfit, newx = xtr, s="lambda.1se")
+spred = predict(sfit, newx = x, s="lambda.1se")
 spred[1:5]
 ```
-    [1]  1.5582246 -1.8251346 -0.6313206 -0.8851065 -0.2853131
+        [1]  1.7841666 -2.0529450 -0.7171475 -0.9923465 -0.3054223
     
 ```r
 sc = coef(sfit, s="lambda.min")
 sc[1:5]
 ```
-    [1] -0.35647908 -0.28158566 -0.09095634 -0.20593030 -0.20496220
+    [1] -0.5366175 -0.4487022 -0.2064157 -0.3719257 -0.3550080
 
-### alignment = "lambda"
-NOT WORKING - NEEDS TO BE FIXED
 ```r
-lfit = cv_rpair(x, S, loss_type="log", nlambda=25, type.measure="cindex", alignment="lambda")
+lfit = cv_rpair(x, S, loss_type="log", nlambda=25, type.measure="cindex", alignment="fraction")
 plot(lfit)
 ```
+
 <img src="imgs/cv_lfit_plot.png" width="665" height="455" />
 
 ```r
-lpred = predict(lfit, newx = xtr, s="lambda.min")
+lpred = predict(lfit, newx = x, s="lambda.min")
 lpred[1:5]
 ```
-    [1]  0.3277018 -1.1086094 -0.1631965 -0.3021159 -0.2706089
+    [1]  12.405622 -15.946027  -6.851173  -5.647310  -2.843435
     
 ```r
 lc = coef(lfit, s="lambda.1se")
 lc[1:5]
 ```
-    [1] -0.2961401  0.0000000  0.0000000  0.0000000  0.0000000
+    [1] -1.1123256 -0.9166612 -0.2898089 -0.6603276 -0.6496257

@@ -4,14 +4,16 @@
 #'
 #' @param x Input matrix as in rpair_gloss and rpair_hinge.
 #' @param y Response as in rpair_gloss and rpair_hinge.
-#' @param loss_type Loss function to use. One of c("log", "exp ,"sqh", "huh").
+#' @param loss_type Loss function to use. One of c("exp", "log" ,"sqh", "huh"). Default: "exp".
 #' @param nlambda Number of lambda values. Default: 100.
 #' @param type.measure Loss to use for cross-validation. Available loss functions are "deviance" and "cindex".
 #' @param nfolds Number of folds. Default: 10.
-#' @param alignment Determines whether to use the lambda values computed on the master fit to line up the data
-#'    on each fold ("lambda", default) or if the predictions in each fold are are aligned according to the fraction
-#'    of progress along each fold ("fraction"). See \link[glmnet]{cv.glmnet} for details.
-#'    One of c("lambda", "fraction"). Default: "lambda".
+#' @param foldid Optional vector of values between 1 and nfolds identifying which fold each observation should be in.
+#'   If provided, nofolds can be missing. Pairs caanot be provided as input when foldid is missing.
+#' @param alignment Determines whether the predictions in each fold are aligned according to the fraction
+#'    of progress along each fold ("fraction", default) or to use the lambda values computed on the master fit
+#'    to line up the data on each fold ("lambda"). See \link[glmnet]{cv.glmnet} for details. One of
+#'    c("fraction", "lambda"). Default: "fraction".
 #' @param grouped Not implemented in this version. Default: FALSE.
 #' @param keep If keep=TRUE, returns a list of fitted values for each fold and a corresponding list of foldids.
 #'    Default: FALSE.
@@ -22,13 +24,13 @@
 #' @export
 cv_rpair <- function(x,
                      y,
-                     loss_type = c("log", "exp", "sqh", "huh"),
+                     loss_type = c("exp", "log", "sqh", "huh"),
                      lambda=NULL,
                      nlambda=100,
                      type.measure = c("deviance", "cindex"),
                      nfolds = 10,
                      foldid = NULL,
-                     alignment = c("lambda", "fraction"),
+                     alignment = c("fraction", "lambda"),
                      grouped = FALSE,
                      keep = FALSE,
                      ...
@@ -43,6 +45,10 @@ cv_rpair <- function(x,
     warning("fraction of path alignment not available if lambda given as argument; switched to alignment=`lambda`")
     alignment = "lambda"
   }
+  if(alignment == "lambda" && is.null(lambda)){
+    warning("Unusual behavior has been observed when using alignment=`lambda`, particularly for logistic loss.
+ Proper functionality cannot be guaranteed when selecting alignment=`lambda`, proceed at own risk.")
+  }
   N = nrow(x)
   y = drop(y)
   cv.call = rpair.call = match.call(expand.dots = TRUE)
@@ -53,6 +59,9 @@ cv_rpair <- function(x,
   rpair.call[[1]] = as.name("rpair")
 
   if (is.null(foldid)){
+    pairs = y_to_pairs(y)
+    if(identical(pairs,y)) stop("The function cv_rpair does not support pairs as an input type without user-provided
+                                fold")
     foldid_df = get_stratified_folds(y, nfolds)
     foldid = foldid_df$fold
   }else{

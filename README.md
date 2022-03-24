@@ -1,21 +1,20 @@
 Introduction
 ============
 
-The 'Regularized PAIrwise Ranking survival analysis', or rpair, package
-is a convenient toolbox for conducting survival analyses on
-high-dimensional omics data with censored survival times. rpair combines
-a general framework for casting the survival prediction problem to a
-pairwise learning problem with a penalty function allowing for sparse
+The 'Regularized PAIrwise Ranking', or rpair, package is a convenient 
+toolbox for conducting analyses on high-dimensional omics data. rpair combines
+a general framework for casting complex outcomes into
+pairwise learning problems with a penalty function allowing for sparse
 solutions. This results in models that are not only able to fully
-utilize censored data, but are far more interpretable than the
-traditional Cox proportional hazard model. The package supports four
+utilize such data, but are far more interpretable than traditional 
+methods such as the Cox proportional hazard model. The package supports four
 types of loss functions: logistic loss, exponential loss, squared hinge
 loss and huberized hinge loss.
 
 Reference
 =========
 
-Buyukozkan, et al. \"Regularized PAIrwise Ranking survival analysis:
+Buyukozkan, Chetnik, and Krumsiek. \"Regularized PAIrwise Ranking survival analysis:
 RPAIR\". (unpublished) 2022
 
 Installation instructions
@@ -80,4 +79,4 @@ are provided in the following tutorials:
 
 -   [Tutorial 2: the cv_rpair function](https://github.com/krumsieklab/rpair/blob/master/tutorials/02_the_cv_rpair_function.md)
 
--   Tutorial 3: example analysis function (?)
+-   [Tutorial 3: analysis of dataset x](https://github.com/krumsieklab/rpair/blob/master/tutorials/03_analysis_of_dataset_x.md)

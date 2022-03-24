@@ -1,9 +1,9 @@
 Tutorial 1: the rpair function
 ================
 
-This tutorial demonstrates how to use the rpair function and its utility functions. The rpair function supports
-four types of loss functions: exponential (default), logistic, squared hinge, and huberized hinge loss. Each loss type
-is demonstrated below along with one or more of rpair's utility functions.
+NOTE: The rpair function performs model fitting on a dataset, however, in most cases it is desirable to optimize the models parameters using cross-validation. The cv_rpair function performs k-fold cross-validation for the rpair function. In most typical use cases, the user will call cv_rpair rather than call the rpair function directly.  The tutorial for the cv_rpair function can be found [here](https://github.com/krumsieklab/rpair/blob/master/tutorials/02_the_cv_rpair_function.md).
+
+This tutorial demonstrates how to use the rpair function and its utility functions.  The rpair function supports four types of loss functions: exponential (default), logistic, squared hinge, and huberized hinge loss. Each loss type is demonstrated below along with one or more of rpair's utility functions.
 
 ``` r
 library(rpair)
