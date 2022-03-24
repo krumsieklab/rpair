@@ -27,13 +27,8 @@ hfit = rpair_hinge(x, cp, standardize = F, pmax = 50, loss_type = "huh")
 
 # predict.rpair
 plot(hfit, xvar="norm")
-lplot <- plot(sfit, xvar="lambda")
-plot(lplot)
-# this one throws an error:
-# Error in names(index) <- colnames(beta) : 
-#    attempt to set an attribute on NULL
-dplot <- plot(hfit, xvar="dev", legend=TRUE)
-plot(dplot)
+splot <- plot(sfit, xvar="lambda")
+plot(splot)
 
 # coef.rpair
 hcoef <- coef(hfit)

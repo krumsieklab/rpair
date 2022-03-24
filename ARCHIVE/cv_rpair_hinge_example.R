@@ -34,20 +34,25 @@ Str = S
 
 alpha = 1
 # the maximum number of variables ever to be nonzero
-pmx = min(ncol(x), sum(S[,2]))
-if(alpha < 0.5 ) pmx = ncol(x)+1
+#pmx = min(ncol(x), sum(S[,2]))
+pmx = min(ncol(x))
+#if(alpha < 0.5 ) pmx = ncol(x)+1
 
 # exp loss
 kcv1 = cv_rpair(xtr, Str, foldid=fids, nlambda=25, type.measure = "deviance",
                 pmax = pmx, alignment = "fraction", keep = T, loss_type="sqh")
 
 # log loss
-kcv2 = cv_rpair(xtr, Str, foldid=fids, type.measure = "deviance",
-                pmax = pmx, alignment = "fraction", nlambda = 25, keep = T, loss_type="huh")
+kcv2 = cv_rpair(xtr, Str, foldid=fids, type.measure = "cindex",
+                pmax = pmx, alignment = "fraction", nlambda = 25, keep = T, loss_type="huh", eps = 1e-06,
+                maxit = 1e+05, delta = 3)
+
+kcv2 = cv_rpair(xtr, Str, foldid=fids, type.measure = "cindex",
+                pmax = 48, alignment = "fraction", nlambda = 100, keep = T, loss_type="huh")
 
 # fold-ids missing
-kcv3 = cv_rpair(xtr, Str, nfolds = 5, type.measure = "deviance",
-                pmax = pmx, alignment = "fraction", nlambda = 25, keep = T, loss_type="sqh")
+kcv3 = cv_rpair(xtr, Str, nfolds = 5, type.measure = "cindex",
+                pmax = 48, alignment = "fraction", nlambda = 100, keep = T, loss_type="sqh")
 
 # alignment = lambda - this does not appear to be working correctly
 kcv4 = cv_rpair(xtr, Str, foldid = fids, type.measure = "deviance",

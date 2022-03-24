@@ -72,12 +72,11 @@ predict.rpair <- function(object, newx, s = NULL, type = c("link",
 }
 
 
-coef.rpair <- function(object){
-  # removed s and exact functionality
+coef.rpair <- function(object, s=NULL){
   # removed ...
   
   print("Hi from coef.rpair!")
-  predict(object, type = "coefficients")
+  predict(object, s=s, type = "coefficients")
 }
 
 #' Plot Coefficients from a "rpair" object
@@ -96,7 +95,7 @@ plot.rpair <- function (x, xvar = c("norm", "lambda", "dev"), label = FALSE, leg
 {
   # KC: took out ... for now
   
-  print("Hi from plot.rpair!")
+  #print("Hi from plot.rpair!")
   xvar = match.arg(xvar)
   print(xvar)
   plotcoef(x$beta, lambda = x$lambda, df = x$df, dev = x$dev.ratio, 
@@ -109,7 +108,7 @@ plotcoef <- function (beta, norm, lambda, df, dev, label = FALSE, legend = FALSE
 {
   # KC: took out ... for now
   
-  print("Hi from plotcoef!")
+  #print("Hi from plotcoef!")
   
   which = glmnet:::nonzeroCoef(beta)
   nwhich = length(which)
