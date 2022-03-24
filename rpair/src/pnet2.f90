@@ -1,21 +1,24 @@
+! This code is adapted from the phuhnet and psqhnet ortran implementations in the gcdnet package authored by
+! Yi Yang and Hui Zou.
+! Please refer to https://github.com/cran/gcdnet
 ! --------------------------------------------------------------------------
 ! ____NET/.f90: the GCD algorithm for HHSVM.
 ! --------------------------------------------------------------------------
-! 
+!
 ! USAGE:
-! 
+!
 ! call hsvmlassoNET (delta, lam2, nobs, nvars, x, y, jd, pf, pf2, dfmax, &
 ! & pmax, nlam, flmin, ulam, eps, isd, maxit, nalam, b0, beta, ibeta, &
 ! & nbeta, alam, npass, jerr)
-! 
+!
 ! INPUT ARGUMENTS:
-! 
+!
 !    delta = the parameter in HHSVM model.
 !    lam2 = regularization parameter for the quadratic penalty of the coefficients
 !    nobs = number of observations
 !    nvars = number of predictor variables
 !    x(nobs, nvars) = matrix of predictors, of dimension N * p; each row is an observation vector.
-!    y(nobs) = response variable. This argument should be a two-level factor {-1, 1} 
+!    y(nobs) = response variable. This argument should be a two-level factor {-1, 1}
 !            for classification.
 !    jd(jd(1)+1) = predictor variable deletion flag
 !                  jd(1) = 0  => use all variables

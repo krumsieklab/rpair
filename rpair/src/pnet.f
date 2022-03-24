@@ -1,19 +1,24 @@
-      subroutine plognet (parm,no,ni,nc,x,y,g,jd,vp,cl,ne,nx,nlam,flmin,u   1533 
+! This code is adapted from the plognet and pfishnet fortran implementations in the glmnet package authored by
+! Jerome Friedman, Trevor Hastie, and Robert Tibshirani.
+! Please refer to https://github.com/cran/glmnet or "Jerome Friedman, Trevor Hastie, Robert Tibshirani (2010).
+! Regularization Paths for Generalized Linear Models via Coordinate Descent. Journal of Statistical Software,
+! 33(1), 1-22. URL https://www.jstatsoft.org/v33/i01/."
+      subroutine plognet (parm,no,ni,nc,x,y,g,jd,vp,cl,ne,nx,nlam,flmin,u   1533
      *lam,thr,isd,maxit,kopt,lmu,a0,ca,ia,nin,dev0,dev,alm,nlp,nc
      *p,pp, jerr)
       implicit double precision(a-h,o-z)                                   1534
-      double precision x(no,ni),y(ncp,max(2,nc)),g(ncp,nc),vp(ni),         1535 
+      double precision x(no,ni),y(ncp,max(2,nc)),g(ncp,nc),vp(ni),         1535
      *ulam(nlam)
-      double precision ca(nx,nc,nlam),a0(nc,nlam),dev(nlam),alm(nlam),cl   1536 
+      double precision ca(nx,nc,nlam),a0(nc,nlam),dev(nlam),alm(nlam),cl   1536
      *(2,ni)
       integer jd(*),ia(nx),nin(nlam)                                       1537
-      double precision, dimension (:), allocatable :: xm,xs,ww,vq,xv            
+      double precision, dimension (:), allocatable :: xm,xs,ww,vq,xv
       integer, dimension (:), allocatable :: ju
-      
+
       integer intr
       double precision x2(ncp,ni)
       integer pp(ncp,2)
-      intr = 0 
+      intr = 0
 
 c     print *, "flmin = ", flmin
       x2 =  x(pp(:,1),:) - x(pp(:,2),:)
