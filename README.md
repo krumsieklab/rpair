@@ -32,16 +32,43 @@ Getting Started
 ===============
 ```r
 # generate survival data
+ks = 100
+
+# number of features
+n1 = 20 # n informative features
+n2 = 40 # n noisy features
+
+set.seed(42)
+
+# coefficients
+b = c( exp(runif(n1)), seq(n2)*0) %>% round(2)
+
+x = matrix( rnorm((n1+n2)*100), nrow = ks ) %>% scale
+S = Surv(exp( scale(x %*% b)), sample(c(F,T),ks, T) )
+colnames(S) = c("time", "status")
+
+fids = sample(4, ks, T)
+
+alpha = 1
+# the maximum number of variables ever to be nonzero
+pmx = min(ncol(x), sum(S[,2]))
+if(alpha < 0.5 ) pmx = ncol(x)+1
 
 library(rpair)
 
-cv = cv_rpair(data, ...)
+cv = cv_rpair(x, S, foldid=fids, nlambda=25, loss_type="exp", alpha = alpha,
+                pmax = pmx, alignment = "fraction", keep = T)
 
 plot(cv)
-pr = predict(cv, new_data)
 
-# show plot and predictions
+pr = predict(cv, x)
+pr[1:5]
 ```
+
+<img src="tutorials/imgs/get_start_plot.png" width="665" height="455" />
+
+    [1]  0.79511265 -1.52421967 -0.53790436 -0.74291613 -0.27140260  0.01558794 -0.57333305  1.50476447  1.01263183
+    [10] -1.13966754
 
 Tutorials
 =========
