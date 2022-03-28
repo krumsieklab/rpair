@@ -14,6 +14,7 @@ source("cv_funs_kelsey/ssvm_utils.R")
 source("utils_pairs.R")
 source("utils_repair.R")
 source("load_fortran.R")
+source("cv_funs_kelsey/cv_utils.R")
 
 # generate example data  --------------------------------------------------
 
@@ -61,8 +62,15 @@ kcv3 = cv_rpair(xtr, Str, nfolds = 5, type.measure = "deviance", alpha = alpha,
 
 # alignment = lambda - this does not appear to be working correctly
 kcv4 = cv_rpair(xtr, Str, foldid = fids, type.measure = "deviance", alpha = alpha, 
-                pmax = pmx, alignment = "lambda", nlambda = 25, keep = T, loss_type="log")
+                pmax = pmx, alignment = "lambda", nlambda = 25, keep = T, loss_type="exp")
 # all fit.preval dfs are equal entirely 0
 # gives this warning for every fold:
 #  from glmnet Fortran code (error code -10001); Number of nonzero coefficients along the path exceeds pmax=48 at 
 #    1th lambda value; solutions for larger lambdas returned 
+
+
+#----------------------------------------------------------------
+kcoef <- coef(kcv4)
+kpred <- predict(kcv4, xtr)
+plot(kcv4, ggplot=T)
+
