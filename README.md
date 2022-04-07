@@ -10,6 +10,7 @@ utilize such data, but are far more interpretable than traditional
 methods such as the Cox proportional hazard model. The package supports four
 types of loss functions: logistic loss, exponential loss, squared hinge
 loss and huberized hinge loss.
+[JK: intro needs to be adapted, up to this point it could be glmnet. currently discussed in slack] 
 
 Reference
 =========
@@ -24,12 +25,20 @@ The rpair package can be installed using the following command:
 
 ```r
 require(devtools)
-devtools::install_github(repo=\"krumsieklab/rpair\", subdir=\"rpair\")
+devtools::install_github(repo="krumsieklab/rpair", subdir="rpair")
 ```
 
 Getting Started
 ===============
 ```r
+
+# libraries
+library(rpair)
+library(magrittr)
+library(survival)
+
+set.seed(42)
+
 # generate survival data
 ks = 100
 
@@ -37,42 +46,50 @@ ks = 100
 n1 = 20 # n informative features
 n2 = 40 # n noisy features
 
-set.seed(42)
-
 # coefficients
-b = c( exp(runif(n1)), seq(n2)*0) %>% round(2)
+b = c(exp(runif(n1)), seq(n2)*0) %>% round(2)
 
-x = matrix( rnorm((n1+n2)*100), nrow = ks ) %>% scale
-S = Surv(exp( scale(x %*% b)), sample(c(F,T),ks, T) )
+# generate data matrix
+X = matrix(rnorm((n1+n2)*100), nrow = ks) %>% scale
+# generate survival times
+S = Surv(exp(scale(X %*% b)), sample(c(F,T),ks, T) )
 colnames(S) = c("time", "status")
 
-fids = sample(4, ks, T)
+fids = sample(4, ks, T) # [JK, can this be deleted?]
 
+# [JK, @mubu, I think you said this can be deleted?]
 alpha = 1
 # the maximum number of variables ever to be nonzero
-pmx = min(ncol(x), sum(S[,2]))
-if(alpha < 0.5 ) pmx = ncol(x)+1
+pmx = min(ncol(X), sum(S[,2]))
+if(alpha < 0.5 ) pmx = ncol(X)+1
 
-library(rpair)
 
-cv = cv_rpair(x, S, foldid=fids, nlambda=25, loss_type="exp", alpha = alpha,
+# run cross-validated rpair
+cv = cv_rpair(X, S, foldid=fids, nlambda=25, loss_type="exp", alpha = alpha,
                 pmax = pmx, alignment = "fraction", keep = T)
 
+# lambda plot
 plot(cv)
 
-pr = predict(cv, x)
+# apply model to input data
+pr = predict(cv, X)
+# show predicted survival times
 pr[1:5]
 ```
+
+[JK, @Kelsey, it looks like the vector below is not actually an output of the code above. Code is 1:5, but below is 10 entries]
 
 <img src="tutorials/imgs/get_start_plot.png" width="665" height="455" />
 
     [1]  0.79511265 -1.52421967 -0.53790436 -0.74291613 -0.27140260  0.01558794 -0.57333305  1.50476447  1.01263183
     [10] -1.13966754
 
+
+
 Tutorials
 =========
 
-Detailed examples illustrating the full functionalities of the package
+Detailed examples illustrating the full functionality of the package
 are provided in the following tutorials:
 
 -   [Tutorial 1: the rpair function](https://github.com/krumsieklab/rpair/blob/master/tutorials/01_the_rpair_function.md)
