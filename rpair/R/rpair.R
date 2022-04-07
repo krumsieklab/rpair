@@ -38,28 +38,27 @@
 #'    Default: "Newton".
 #' @param delta For SVM models only. The parameter delta in the HHSVM model. Must be greater than 0. Default: 3.
 #'
-#' @return An object with S3 class "rpair", "*", where "*" is "lognet", "fishnet", "phuhnet". or "psqhnet". Contains
-#' the following attributes:
+#' @return An object with S3 class \code{"rpair"}, "*", where "*" is \code{"lognet"}, \code{"fishnet"|,
+#' \code{"phuhnet"}. or \code{"psqhnet"}. Contains the following attributes:
+#'    \item{beta}{a nvars x length(lambda) matrix of coefficients, stored in sparse column format}
+#'    \item{df}{the number of nonzero coefficients for each value of lambda}
+#'    \item{dim}{dimension of coefficient matrix}
+#'    \item{lambda}{The actual sequence of lambda values used}
+#'    \item{npasses}{total passes over the data summed over all lambda values}
+#'    \item{jerr}{error flag, for warnings and errors (largely for internal debugging)}
+#'    \item{dev.ratio}{Returned for logistic (lognet) and exponential (fishnet) only. The fraction of (null) deviance
+#'       explained.}
+#'    \item{nulldev}{Returned for logistic (lognet) and exponential (fishnet) only. The null deviance
+#'       (per observation).}
+#'    \item{call}{the call that produced the object}
+#'    \item{loss}{the loss function used}
+#'    \item{nobs}{the number of observations}
 #'
 #' @examples
-#'fp<- function(S){
-#' time <- S[,1]
-#' status <- S[,2]
-#' N = length(time)
-#' # for tied times
-#' time[status == 0] = time[status == 0]+1e-4
-#' dtimes <- time
-#' dtimes[status == 0] = Inf
-#' which(outer(time, dtimes, ">"), arr.ind = T)
-#' }
-#' # generate some random data
-#' set.seed(41)
-#' x = matrix(rnorm(40000),ncol = 200 )
-#' S = cbind(sample(nrow(x)), rbinom(nrow(x),1,prob = 0.7))
-#' # generate pairs
-#' cp = fp(S)
-#' efit = rpair(x, cp, standardize = F, pmax = 50, loss_type = "exp")
-#' lfit = rpair(x, cp, standardize = F, pmax = 50, loss_type = "sqh")
+#' # GLM
+#' efit = rpair(surv_x, surv_cp, standardize = F, pmax = 50, loss_type = "exp")
+#' # SVM
+#' sfit = rpair(surv_x, surv_cp, standardize = F, pmax = 50, loss_type = "sqh")
 #'
 #' @author mubu, KC
 #'
@@ -84,9 +83,12 @@ rpair <- function(x,
                   delta
 ){
 
+  # check loss type
   loss_type = match.arg(loss_type)
+  # get arguments to pass
   args <- as.list(match.call())[-1]
 
+  # call appropriate internal function to fit model
   fit <- switch(loss_type,
                 exp = do.call(rpair_gloss, args),
                 log = do.call(rpair_gloss, args),

@@ -76,8 +76,7 @@ Default: "Newton".}
 \link[gcdnet]{gcdnet} for details. Default: rep(1, nvars).}
 }
 \value{
-An object with S3 class "rpair", "*", where "*" is "lognet", "fishnet", "phuhnet". or "psqhnet". Contains
-the following attributes:
+
 }
 \description{
 Fit a generalized linear model or SVM model for pairwise survival ranking models. GLM models use either logistic
@@ -87,24 +86,10 @@ implementation of \link[gcdnet]{gcdnet} for squared and huberized hinge loss. Re
 documentation for further details.
 }
 \examples{
-fp<- function(S){
-time <- S[,1]
-status <- S[,2]
-N = length(time)
-# for tied times
-time[status == 0] = time[status == 0]+1e-4
-dtimes <- time
-dtimes[status == 0] = Inf
-which(outer(time, dtimes, ">"), arr.ind = T)
-}
-# generate some random data
-set.seed(41)
-x = matrix(rnorm(40000),ncol = 200 )
-S = cbind(sample(nrow(x)), rbinom(nrow(x),1,prob = 0.7))
-# generate pairs
-cp = fp(S)
-efit = rpair(x, cp, standardize = F, pmax = 50, loss_type = "exp")
-lfit = rpair(x, cp, standardize = F, pmax = 50, loss_type = "sqh")
+# GLM
+efit = rpair(surv_x, surv_cp, standardize = F, pmax = 50, loss_type = "exp")
+# SVM
+sfit = rpair(surv_x, surv_cp, standardize = F, pmax = 50, loss_type = "sqh")
 
 }
 \author{

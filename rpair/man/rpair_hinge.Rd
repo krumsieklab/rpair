@@ -61,13 +61,27 @@ Default: NULL.}
 \item{delta}{The parameter delta in the HHSVM model. Must be greater than 0. Default: 3.}
 }
 \value{
-An object with S3 class "rpair", "*", where "*" is "psqhnet" or "phuhnet". Contains the following
-   attributes:
+An object with S3 class \code{"rpair"}, "*", where "*" is \code{"psqhnet"} or \code{"phuhnet"}. Contains
+the following attributes:
+   \item{beta}{a nvars x length(lambda) matrix of coefficients, stored in sparse column format}
+   \item{df}{the number of nonzero coefficients for each value of lambda}
+   \item{dim}{dimension of coefficient matrix}
+   \item{lambda}{The actual sequence of lambda values used}
+   \item{npasses}{total passes over the data summed over all lambda values}
+   \item{jerr}{error flag, for warnings and errors (largely for internal debugging)}
+   \item{call}{the call that produced the object}
+   \item{loss}{the loss function used}
+   \item{nobs}{the number of observations}
 }
 \description{
 Fit a regularization path for large margin classifiers at a sequence of regularization parameters lambda. Uses
 a modified implementation of \link[gcdnet]{gcdnet}. Only supports squared hinge loss and huberized square hinge
 loss. Refer to gcdnet documentation for further details.
+}
+\examples{
+sfit = rpair_hinge(surv_x, surv_cp, standardize = F, pmax = 50, loss_type = "sqh")
+hfit = rpair_hinge(surv_x, surv_cp, standardize = F, pmax = 50, loss_type = "huh")
+
 }
 \author{
 mubu, KC
