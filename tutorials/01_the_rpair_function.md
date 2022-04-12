@@ -1,9 +1,10 @@
 Tutorial 1: the rpair function
 ================
 
+This tutorial demonstrates how to use the rpair function and its utility functions.  The rpair function supports four types of loss functions: exponential (default), logistic, squared hinge, and huberized hinge loss. Each loss type is demonstrated below along with one or more of rpair's utility functions.
+
 NOTE: The rpair function performs model fitting on a dataset, however, in most cases it is desirable to optimize the models parameters using cross-validation. The cv_rpair function performs k-fold cross-validation for the rpair function. In most typical use cases, the user will call cv_rpair rather than call the rpair function directly.  The tutorial for the cv_rpair function can be found [here](https://github.com/krumsieklab/rpair/blob/master/tutorials/02_the_cv_rpair_function.md).
 
-This tutorial demonstrates how to use the rpair function and its utility functions.  The rpair function supports four types of loss functions: exponential (default), logistic, squared hinge, and huberized hinge loss. Each loss type is demonstrated below along with one or more of rpair's utility functions.
 
 ``` r
 library(rpair)
@@ -33,7 +34,7 @@ x[1:4,1:4]
 ```r
 # first five rows of survival data
 colnames(S) <- c("time", "status")
-as.matrix(S)[1:5,]
+as.matrix(S)[1:5,] #[JK, isn't this a much nicer display? S[1:5]  ]
 ```
          time status
     [1,]   54      1
@@ -53,9 +54,11 @@ cp[1:5,]
     [4,]   6   1
     [5,]   7   1
 
-## Exponential Loss
+
+## Fit with exponential Loss
 ```r
 efit = rpair(x, cp, loss_type="exp", pmax=50)
+# generate trace plot
 plot(efit)
 ```
 
@@ -71,9 +74,11 @@ ec[22:24,16:21]
     V23 -0.02425959 -0.02806981 -0.03173327 -0.035433977 -0.039239990 -0.042913564
     V24  .           .           .          -0.001695107 -0.003519271 -0.005579169
 
-## Logistic Loss
+
+## Fit with logistic Loss
 ```r
 lfit = rpair(x, cp, loss_type="log", pmax=50)
+# generate trace plot
 plot(lfit, xvar="dev")
 ```
 
@@ -90,7 +95,8 @@ lp[1:4, 2:5]  # skip the intercept column
     [3,]  0.004310137 -0.0155949314 -0.036261348 -0.05663072
     [4,] -0.003066923 -0.0082080652 -0.016309725 -0.02769007
     
-## Squared Hinge Loss
+    
+## Fit with squared Hinge Loss
 ```r
 sfit = rpair(x, cp, loss_type="sqh",pmax=50)
 plot(sfit, xvar="lambda")
@@ -100,13 +106,15 @@ plot(sfit, xvar="lambda")
 
 ```r
 sn <- predict(sfit, type = "nonzero")
-sn$s2
+sn$s2 # [JK it seems like this fit is inspected different than the other two above and the fourth one below... why is that?]
 ```
     [1] 84  89  90  95 104 108 143
 ```r
 sn$s15
 ```
     [1]   9  22  23  35  38  55  74  84  89  90  95  99 104 106 108 117 118 124 142 143 173 175 190 197 198  
+
+
 ## Huberized Hinge Loss
 ```r
 hfit = rpair(x, cp, loss_type="huh",pmax=50)
