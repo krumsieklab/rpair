@@ -7,7 +7,7 @@
 rpair_gloss(
   x,
   y,
-  loss_type = c("log", "exp"),
+  loss_type = c("exp", "log"),
   alpha = 1,
   nlambda = 100,
   lambda.min.ratio = ifelse(nobs0 <= nvars, 0.01, 1e-04),
@@ -52,12 +52,24 @@ Default: NULL.}
 
 \item{maxit}{Maximum number of passes over the data for all lambda values. Default: 100000.}
 
-\item{type.logistic}{One of c("Newton", "modified.Newton"). If "Newton" then the exact hessian is used, while
-"modified.Newton" uses an upper-bound on the hessian and can be faster. Default: "Newton".}
+\item{type.logistic}{Only used by logistic loss. One of c("Newton", "modified.Newton"). If "Newton" then the
+exact hessian is used, while "modified.Newton" uses an upper-bound on the hessian and can be faster.
+Default: "Newton".}
 }
 \value{
-An object with S3 class "rpair", "*", where "*" is "lognet" or "fishnet". Contains the following
-   attributes:
+An object with S3 class \code{"rpair"}, "*", where "*" is \code{"lognet}" or \code{"fishnet"}. Contains
+the following attributes:
+   \item{beta}{a nvars x length(lambda) matrix of coefficients, stored in sparse column format}
+   \item{df}{the number of nonzero coefficients for each value of lambda}
+   \item{dim}{dimension of coefficient matrix}
+   \item{lambda}{The actual sequence of lambda values used}
+   \item{npasses}{total passes over the data summed over all lambda values}
+   \item{jerr}{error flag, for warnings and errors (largely for internal debugging)}
+   \item{dev.ratio}{The fraction of (null) deviance explained}
+   \item{nulldev}{the null deviance (per observation)}
+   \item{call}{the call that produced the object}
+   \item{loss}{the loss function used}
+   \item{nobs}{the number of observations}
 }
 \description{
 Fit a generalized linear model for pairwise survival ranking models using either logistic loss (concordance
@@ -65,24 +77,8 @@ regression) or exponential loss. Uses a modified implementation of \link[glmnet]
 documentation for further details.
 }
 \examples{
-fp<- function(S){
-time <- S[,1]
-status <- S[,2]
-N = length(time)
-# for tied times
-time[status == 0] = time[status == 0]+1e-4
-dtimes <- time
-dtimes[status == 0] = Inf
-which(outer(time, dtimes, ">"), arr.ind = T)
-}
-# generate some random data
-set.seed(41)
-x = matrix(rnorm(40000),ncol = 200 )
-S = cbind(sample(nrow(x)), rbinom(nrow(x),1,prob = 0.7))
-# generate pairs
-cp = fp(S)
-efit = rpair_gloss(x, cp, standardize = F, pmax = 50, loss_type = "exp")
-lfit = rpair_gloss(x, cp, standardize = F, pmax = 50, loss_type = "log")
+efit = rpair_gloss(surv_x, surv_cp, pmax = 50, loss_type = "exp")
+lfit = rpair_gloss(surv_x, surv_cp, pmax = 50, loss_type = "log")
 
 }
 \author{

@@ -27,8 +27,21 @@
 #' @param maxit Maximum number of passes over the data for all lambda values. Default: 1e+05
 #' @param delta The parameter delta in the HHSVM model. Must be greater than 0. Default: 3.
 #'
-#' @return An object with S3 class "rpair", "*", where "*" is "psqhnet" or "phuhnet". Contains the following
-#'    attributes:
+#' @return An object with S3 class \code{"rpair"}, "*", where "*" is \code{"psqhnet"} or \code{"phuhnet"}. Contains
+#' the following attributes:
+#'    \item{beta}{a nvars x length(lambda) matrix of coefficients, stored in sparse column format}
+#'    \item{df}{the number of nonzero coefficients for each value of lambda}
+#'    \item{dim}{dimension of coefficient matrix}
+#'    \item{lambda}{The actual sequence of lambda values used}
+#'    \item{npasses}{total passes over the data summed over all lambda values}
+#'    \item{jerr}{error flag, for warnings and errors (largely for internal debugging)}
+#'    \item{call}{the call that produced the object}
+#'    \item{loss}{the loss function used}
+#'    \item{nobs}{the number of observations}
+#'
+#' @examples
+#' sfit = rpair_hinge(surv_x, surv_cp, standardize = F, pmax = 50, loss_type = "sqh")
+#' hfit = rpair_hinge(surv_x, surv_cp, standardize = F, pmax = 50, loss_type = "huh")
 #'
 #' @author mubu, KC
 #'
@@ -50,27 +63,23 @@ rpair_hinge <- function(x,
                         delta = 3
   ){
 
-    loss_type <- match.arg(loss_type)
+    # return call with fitted object
     this.call <- match.call()
 
+    ### Prepare input and outcome variables
     x <- as.matrix(x)
 
     nobs <- as.integer(nrow(x))
     nvars <- as.integer(ncol(x))
     vnames <- colnames(x)
+    if (is.null(vnames)) vnames <- paste("V", seq(nvars), sep = "")
 
+    # generate comparable pairs
     cp = y_to_pairs(y)
 
-    if (is.null(vnames))
-      vnames <- paste("V", seq(nvars), sep = "")
-
-    if (length(pf) != nvars)
-      stop("The size of L1 penalty factor must be same as the number of input variables")
-    if (length(pf2) != nvars)
-      stop("The size of L2 penalty factor must be same as the number of input variables")
-    if (lambda2 < 0)
-      stop("lambda2 must be non-negative")
-
+    ### Prepare all the generic arguments, then hand off to loss_type functions
+    ## unmodified parameters
+    loss_type <- match.arg(loss_type)
     maxit <- as.integer(maxit)
     lam2 <- as.double(lambda2)
     pf <- as.double(pf)
@@ -82,6 +91,14 @@ rpair_hinge <- function(x,
 
     # for now, not supporting user-provided exclude
     jd <- as.integer(0)
+
+    ## parameters with checks / conditions
+    if (length(pf) != nvars)
+      stop("The size of L1 penalty factor must be same as the number of input variables")
+    if (length(pf2) != nvars)
+      stop("The size of L2 penalty factor must be same as the number of input variables")
+    if (lambda2 < 0)
+      stop("lambda2 must be non-negative")
 
     nlam <- as.integer(nlambda)
     if (is.null(lambda)) {
@@ -97,6 +114,8 @@ rpair_hinge <- function(x,
       ulam <- as.double(rev(sort(lambda)))
       nlam <- as.integer(length(lambda))
     }
+
+    ### Fit model
     fit <- switch(loss_type,
                   huh = phuhnetfit(x, cp[,2:1], nlam, flmin, ulam, isd, eps, dfmax, pmax, jd, pf, pf2, maxit, lam2, delta, nobs, nvars, vnames),
                   sqh = psqhnetfit(x, cp[,2:1], nlam, flmin, ulam, isd, eps, dfmax, pmax, jd, pf, pf2, maxit, lam2, nobs, nvars, vnames)
@@ -106,7 +125,8 @@ rpair_hinge <- function(x,
     fit$call <- this.call
     fit$loss=loss_type
     fit$nobs=nobs
-    class(fit) <- c(class(fit), "rpair", "gcdnet")
+
+    class(fit) <- c(class(fit), "rpair")
     fit
 
   }

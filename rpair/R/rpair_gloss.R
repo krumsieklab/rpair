@@ -21,31 +21,28 @@
 #' @param pmax Limit the maximum number of variables that can be nonzero. Default: min(dfmax*2+20, nvars).
 #' @param penalty.factor Vector of penalty factors to apply to each coefficient. Default: rep(1, nvars).
 #' @param maxit Maximum number of passes over the data for all lambda values. Default: 100000.
-#' @param type.logistic One of c("Newton", "modified.Newton"). If "Newton" then the exact hessian is used, while
-#'    "modified.Newton" uses an upper-bound on the hessian and can be faster. Default: "Newton".
+#' @param type.logistic Only used by logistic loss. One of c("Newton", "modified.Newton"). If "Newton" then the
+#'    exact hessian is used, while "modified.Newton" uses an upper-bound on the hessian and can be faster.
+#'    Default: "Newton".
 #'
-#' @return An object with S3 class "rpair", "*", where "*" is "lognet" or "fishnet". Contains the following
-#'    attributes:
+#' @return An object with S3 class \code{"rpair"}, "*", where "*" is \code{"lognet}" or \code{"fishnet"}. Contains
+#' the following attributes:
+#'    \item{beta}{a nvars x length(lambda) matrix of coefficients, stored in sparse column format}
+#'    \item{df}{the number of nonzero coefficients for each value of lambda}
+#'    \item{dim}{dimension of coefficient matrix}
+#'    \item{lambda}{The actual sequence of lambda values used}
+#'    \item{npasses}{total passes over the data summed over all lambda values}
+#'    \item{jerr}{error flag, for warnings and errors (largely for internal debugging)}
+#'    \item{dev.ratio}{The fraction of (null) deviance explained}
+#'    \item{nulldev}{the null deviance (per observation)}
+#'    \item{call}{the call that produced the object}
+#'    \item{loss}{the loss function used}
+#'    \item{nobs}{the number of observations}
+#'
 #'
 #' @examples
-#'fp<- function(S){
-#' time <- S[,1]
-#' status <- S[,2]
-#' N = length(time)
-#' # for tied times
-#' time[status == 0] = time[status == 0]+1e-4
-#' dtimes <- time
-#' dtimes[status == 0] = Inf
-#' which(outer(time, dtimes, ">"), arr.ind = T)
-#' }
-#' # generate some random data
-#' set.seed(41)
-#' x = matrix(rnorm(40000),ncol = 200 )
-#' S = cbind(sample(nrow(x)), rbinom(nrow(x),1,prob = 0.7))
-#' # generate pairs
-#' cp = fp(S)
-#' efit = rpair_gloss(x, cp, standardize = F, pmax = 50, loss_type = "exp")
-#' lfit = rpair_gloss(x, cp, standardize = F, pmax = 50, loss_type = "log")
+#' efit = rpair_gloss(surv_x, surv_cp, pmax = 50, loss_type = "exp")
+#' lfit = rpair_gloss(surv_x, surv_cp, pmax = 50, loss_type = "log")
 #'
 #' @author mubu, KC
 #'
@@ -53,7 +50,7 @@
 rpair_gloss<-
   function( x,
             y,
-            loss_type=c("log","exp"),
+            loss_type=c("exp","log"),
             alpha=1.0,
             nlambda=100,
             lambda.min.ratio=ifelse(nobs0 <= nvars,1e-2,1e-4),
@@ -67,19 +64,44 @@ rpair_gloss<-
             type.logistic=c("Newton","modified.Newton")
   ){
 
+    # return call with fitted object
+    this.call=match.call()
+
     # previously user-defined variables - for now not supporting the ability for user to set them
-    # offset - defined in loss functions
-    # weights - defined after check dims
     exclude=integer(0)
     lower.limits=-Inf
     upper.limits=Inf
+    # offset - defined in loss functions
+    # weights - defined with generic parameters
 
+    ### Prepare input and outcome variables
+    # for evaluating lambda.min.ratio only
     nobs0 = nrow(x)
+
+    # generate comparable pairs
     cp = y_to_pairs(y)
     ncp = nrow(cp)
 
+    #check matrix dimensions
+    np=c(ncp,ncol(x))
+    if(is.null(np)|(np[2]<=1))stop("x should be a matrix with 2 or more columns")
+
+    nobs=as.integer(np[1])
+    nvars=as.integer(np[2])
+
+    vnames=colnames(x)
+    if(is.null(vnames))vnames=paste("V",seq(nvars),sep="")
+
     ### Prepare all the generic arguments, then hand off to loss_type functions
+    ## unmodified parameters
+    weights=rep(1,nobs)
     loss_type=match.arg(loss_type)
+    ne=as.integer(dfmax)
+    nx=as.integer(pmax)
+    isd=as.integer(standardize)
+    thresh=as.double(thresh)
+
+    ## parameters with checks / conditions
     if(alpha>1){
       warning("alpha >1; set to 1")
       alpha=1
@@ -90,21 +112,6 @@ rpair_gloss<-
     }
     alpha=as.double(alpha)
 
-    this.call=match.call()
-    nlam=as.integer(nlambda)
-    np=c(ncp,ncol(x))
-
-    ###check dims
-    if(is.null(np)|(np[2]<=1))stop("x should be a matrix with 2 or more columns")
-    nobs=as.integer(np[1])
-    nvars=as.integer(np[2])
-
-    weights=rep(1,nobs)
-
-    vnames=colnames(x)
-    if(is.null(vnames))vnames=paste("V",seq(nvars),sep="")
-    ne=as.integer(dfmax)
-    nx=as.integer(pmax)
     if(any(penalty.factor==Inf)){
       exclude=c(exclude,seq(nvars)[penalty.factor==Inf])
       exclude=sort(unique(exclude))
@@ -117,41 +124,7 @@ rpair_gloss<-
     }else jd=as.integer(0)
     vp=as.double(penalty.factor)
 
-    # -- here will need special treatment later
-    ###check on limits
-    if(any(lower.limits>0)){stop("Lower limits should be non-positive")}
-    if(any(upper.limits<0)){stop("Upper limits should be non-negative")}
-    lower.limits[lower.limits==-Inf]= -9.9e+35
-    upper.limits[upper.limits==Inf]= 9.9e+35
-    if(length(lower.limits)<nvars){
-      if(length(lower.limits)==1)lower.limits=rep(lower.limits,nvars)else stop("Require length 1 or nvars lower.limits")
-    }
-    else lower.limits=lower.limits[seq(nvars)]
-    if(length(upper.limits)<nvars){
-      if(length(upper.limits)==1)upper.limits=rep(upper.limits,nvars)else stop("Require length 1 or nvars upper.limits")
-    }
-    else upper.limits=upper.limits[seq(nvars)]
-    cl=rbind(lower.limits,upper.limits)
-    # where glmnet package is needed
-    if(any(cl==0)){
-      #message("for limits==0, needs glmnet::glmnet.control()")
-      require(glmnet)
-      ###Bounds of zero can mess with the lambda sequence and fdev; ie nothing happens and if fdev is not
-      ###zero, the path can stop
-      fdev=glmnet::glmnet.control()$fdev
-      if(fdev!=0) {
-        glmnet::glmnet.control(fdev=0)
-        on.exit(glmnet::glmnet.control(fdev=fdev))
-      }
-    }
-    storage.mode(cl)="double"
-    ### end check on limits
-    # glmnet.control function injects parameters into fortran code
-    # fix this at the end if there is time
-
-    isd=as.integer(standardize)
-    thresh=as.double(thresh)
-
+    nlam=as.integer(nlambda)
     if(is.null(lambda)){
       if(lambda.min.ratio>=1)stop("lambda.min.ratio should be less than 1")
       flmin=as.double(lambda.min.ratio)
@@ -170,6 +143,39 @@ rpair_gloss<-
     )
     kopt=as.integer(kopt)
 
+    # -- here will need special treatment later
+    ### Check lower and upper limits
+    if(any(lower.limits>0)){stop("Lower limits should be non-positive")}
+    if(any(upper.limits<0)){stop("Upper limits should be non-negative")}
+    lower.limits[lower.limits==-Inf]= -9.9e+35
+    upper.limits[upper.limits==Inf]= 9.9e+35
+    if(length(lower.limits)<nvars){
+      if(length(lower.limits)==1)lower.limits=rep(lower.limits,nvars)else stop("Require length 1 or nvars lower.limits")
+    }
+    else lower.limits=lower.limits[seq(nvars)]
+    if(length(upper.limits)<nvars){
+      if(length(upper.limits)==1)upper.limits=rep(upper.limits,nvars)else stop("Require length 1 or nvars upper.limits")
+    }
+    else upper.limits=upper.limits[seq(nvars)]
+    cl=rbind(lower.limits,upper.limits)
+    # where glmnet package is needed
+    if(any(cl==0)){
+      #message("for limits==0, needs glmnet::glmnet.control()")
+      require(glmnet)
+      # Bounds of zero can mess with the lambda sequence and fdev; ie nothing happens and if fdev is not
+      #    zero, the path can stop
+      fdev=glmnet::glmnet.control()$fdev
+      if(fdev!=0) {
+        glmnet::glmnet.control(fdev=0)
+        on.exit(glmnet::glmnet.control(fdev=fdev))
+      }
+    }
+    storage.mode(cl)="double"
+    ### end check on limits
+    # glmnet.control function injects parameters into fortran code
+    # fix this at the end if there is time
+
+    ### Fit model
     fit <-
       switch(loss_type,
              log = plognetfit(x,cp,weights,alpha,nobs,nvars,jd,vp,cl,ne,nx,nlam,flmin,ulam,thresh,isd,vnames,maxit,kopt),
@@ -276,7 +282,7 @@ plognetfit <-
     # KC: add 'type' to this list
     outlist=c(outlist,list(npasses=fit$nlp, jerr=fit$jerr,dev.ratio=dev,nulldev=fit$nulldev))
 
-    class(outlist)=c("lognet","rpair")
+    class(outlist)="lognet"
     outlist
   }
 
@@ -347,7 +353,7 @@ pfishnetfit <-
     dev=fit$dev[seq(fit$lmu)]
     outlist=c(outlist,list(npasses=fit$nlp,jerr=fit$jerr,dev.ratio=dev,nulldev=fit$nulldev))#,offset=is.offset))
 
-    class(outlist)=c("fishnet","rpair")
+    class(outlist)="fishnet"
     outlist
   }
 
