@@ -7,7 +7,10 @@ Authors@R: c(
     person("Kelsey", "Chetnik", role=c("aut")))
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
-Depends: ggplot2
+Depends: 
+    ggplot2,
+    glmnet,
+    R (>= 2.10)
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
