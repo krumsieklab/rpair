@@ -96,4 +96,4 @@ are provided in the following tutorials:
 
 -   [Tutorial 2: the cv_rpair function](https://github.com/krumsieklab/rpair/blob/master/tutorials/02_the_cv_rpair_function.md)
 
--   [Tutorial 3: analysis of dataset x](https://github.com/krumsieklab/rpair/blob/master/tutorials/03_analysis_of_dataset_x.md)
+-   [Tutorial 3: analysis of dataset GSE3493NA ](https://github.com/krumsieklab/rpair/blob/master/tutorials/03_analysis_of_dataset_GSE3493NA.md)
