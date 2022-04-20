@@ -38,27 +38,29 @@
 #'    Default: "Newton".
 #' @param delta For SVM models only. The parameter delta in the HHSVM model. Must be greater than 0. Default: 3.
 #'
-#' @return An object with S3 class \code{"rpair"}, "*", where "*" is \code{"lognet"}, \code{"fishnet"|,
-#' \code{"phuhnet"}. or \code{"psqhnet"}. Contains the following attributes:
-#'    \item{beta}{a nvars x length(lambda) matrix of coefficients, stored in sparse column format}
-#'    \item{df}{the number of nonzero coefficients for each value of lambda}
-#'    \item{dim}{dimension of coefficient matrix}
-#'    \item{lambda}{The actual sequence of lambda values used}
-#'    \item{npasses}{total passes over the data summed over all lambda values}
-#'    \item{jerr}{error flag, for warnings and errors (largely for internal debugging)}
-#'    \item{dev.ratio}{Returned for logistic (lognet) and exponential (fishnet) only. The fraction of (null) deviance
+#' @return An object with S3 class \code{"rpair"}, "*", where "*" is \code{"lognet"}, \code{"fishnet"},
+#' \code{"phuhnet"}, or \code{"psqhnet"}. Contains the following attributes:
+#'  \itemize{
+#'    \item{beta - a nvars x length(lambda) matrix of coefficients, stored in sparse column format}
+#'    \item{df - the number of nonzero coefficients for each value of lambda}
+#'    \item{dim - dimension of coefficient matrix}
+#'    \item{lambda - The actual sequence of lambda values used}
+#'    \item{npasses - total passes over the data summed over all lambda values}
+#'    \item{jerr - error flag, for warnings and errors (largely for internal debugging)}
+#'    \item{dev.ratio - Returned for logistic (lognet) and exponential (fishnet) only. The fraction of (null) deviance
 #'       explained.}
-#'    \item{nulldev}{Returned for logistic (lognet) and exponential (fishnet) only. The null deviance
+#'    \item{nulldev - Returned for logistic (lognet) and exponential (fishnet) only. The null deviance
 #'       (per observation).}
-#'    \item{call}{the call that produced the object}
-#'    \item{loss}{the loss function used}
-#'    \item{nobs}{the number of observations}
+#'    \item{call - the call that produced the object}
+#'    \item{loss - the loss function used}
+#'    \item{nobs - the number of observations}
+#'  }
 #'
 #' @examples
 #' # GLM
-#' efit = rpair(surv_x, surv_cp, standardize = F, pmax = 50, loss_type = "exp")
+#' efit = rpair(surv_x, surv_cp, pmax = 50, loss_type = "exp")
 #' # SVM
-#' sfit = rpair(surv_x, surv_cp, standardize = F, pmax = 50, loss_type = "sqh")
+#' sfit = rpair(surv_x, surv_cp, pmax = 50, loss_type = "sqh")
 #'
 #' @author mubu, KC
 #'

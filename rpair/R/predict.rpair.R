@@ -65,7 +65,7 @@ predict.rpair <- function(object, newx, s = NULL, type = c("link",
   if (type == "coefficients")
     return(nbeta)
   if (type == "nonzero")
-    return(glmnet:::nonzeroCoef(nbeta, bystep = TRUE))
+    return(nonzeroCoef(nbeta, bystep = TRUE))
   if (inherits(newx, "sparseMatrix"))
     newx = as(newx, "dgCMatrix")
   dx = dim(newx)
@@ -106,4 +106,47 @@ lambda.interp <- function (lambda, s)
     sfrac[abs(lambda[left] - lambda[right]) < .Machine$double.eps] = 1
   }
   list(left = left, right = right, frac = sfrac)
+}
+
+#glmnet function
+nonzeroCoef <- function (beta, bystep = FALSE)
+{
+  nr = nrow(beta)
+  if (nr == 1) {
+    if (bystep)
+      apply(beta, 2, function(x) if (abs(x) > 0)
+        1
+        else NULL)
+    else {
+      if (any(abs(beta) > 0))
+        1
+      else NULL
+    }
+  }
+  else {
+    beta = abs(beta) > 0
+    which = seq(nr)
+    ones = rep(1, ncol(beta))
+    nz = as.vector((beta %*% ones) > 0)
+    which = which[nz]
+    if (bystep) {
+      if (length(which) > 0) {
+        beta = as.matrix(beta[which, , drop = FALSE])
+        nzel = function(x, which) if (any(x))
+          which[x]
+        else NULL
+        which = apply(beta, 2, nzel, which)
+        if (!is.list(which))
+          which = data.frame(which)
+        which
+      }
+      else {
+        dn = dimnames(beta)[[2]]
+        which = vector("list", length(dn))
+        names(which) = dn
+        which
+      }
+    }
+    else which
+  }
 }

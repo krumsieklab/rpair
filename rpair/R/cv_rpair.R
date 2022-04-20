@@ -7,7 +7,7 @@
 #' @param loss_type Loss function to use. One of c("exp", "log" ,"sqh", "huh"). Default: "exp".
 #' @param nlambda Number of lambda values. Default: 100.
 #' @param type.measure Loss to use for cross-validation. Available loss functions are "deviance" and "cindex".
-#' @param nfolds Number of folds. Default: 10.
+#' @param nfolds Number of folds. Default: 5.
 #' @param foldid Optional vector of values between 1 and nfolds identifying which fold each observation should be in.
 #'   If provided, nofolds can be missing. Pairs caanot be provided as input when foldid is missing.
 #' @param alignment Determines whether the predictions in each fold are aligned according to the fraction
@@ -28,7 +28,7 @@ cv_rpair <- function(x,
                      lambda=NULL,
                      nlambda=100,
                      type.measure = c("deviance", "cindex"),
-                     nfolds = 10,
+                     nfolds = 5,
                      foldid = NULL,
                      alignment = c("fraction", "lambda"),
                      grouped = FALSE,
@@ -96,7 +96,6 @@ cv_rpair_raw <- function(x, y, loss_type, lambda, nlambda, type.measure, nfolds,
   if(alignment=="lambda") lambda = rpair.object$lambda
   nz = sapply(predict(rpair.object, type = "nonzero"),
               length)
-  print(foldid)
   seqfolds <- seq(max(foldid))
   outlist <- switch(loss_type,
                     log = lapply( seqfolds, function(i)

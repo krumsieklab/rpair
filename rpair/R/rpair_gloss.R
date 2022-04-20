@@ -25,19 +25,21 @@
 #'    exact hessian is used, while "modified.Newton" uses an upper-bound on the hessian and can be faster.
 #'    Default: "Newton".
 #'
-#' @return An object with S3 class \code{"rpair"}, "*", where "*" is \code{"lognet}" or \code{"fishnet"}. Contains
+#' @return An object with S3 class \code{"rpair"}, "*", where "*" is \code{"lognet"} or \code{"fishnet"}. Contains
 #' the following attributes:
-#'    \item{beta}{a nvars x length(lambda) matrix of coefficients, stored in sparse column format}
-#'    \item{df}{the number of nonzero coefficients for each value of lambda}
-#'    \item{dim}{dimension of coefficient matrix}
-#'    \item{lambda}{The actual sequence of lambda values used}
-#'    \item{npasses}{total passes over the data summed over all lambda values}
-#'    \item{jerr}{error flag, for warnings and errors (largely for internal debugging)}
-#'    \item{dev.ratio}{The fraction of (null) deviance explained}
-#'    \item{nulldev}{the null deviance (per observation)}
-#'    \item{call}{the call that produced the object}
-#'    \item{loss}{the loss function used}
-#'    \item{nobs}{the number of observations}
+#'  \itemize{
+#'    \item{beta - a nvars x length(lambda) matrix of coefficients, stored in sparse column format}
+#'    \item{df - the number of nonzero coefficients for each value of lambda}
+#'    \item{dim - dimension of coefficient matrix}
+#'    \item{lambda - The actual sequence of lambda values used}
+#'    \item{npasses - total passes over the data summed over all lambda values}
+#'    \item{jerr - error flag, for warnings and errors (largely for internal debugging)}
+#'    \item{dev.ratio - The fraction of (null) deviance explained}
+#'    \item{nulldev - the null deviance (per observation)}
+#'    \item{call - the call that produced the object}
+#'    \item{loss - the loss function used}
+#'    \item{nobs - the number of observations}
+#'  }
 #'
 #'
 #' @examples
@@ -160,7 +162,6 @@ rpair_gloss<-
     cl=rbind(lower.limits,upper.limits)
     # where glmnet package is needed
     if(any(cl==0)){
-      #message("for limits==0, needs glmnet::glmnet.control()")
       require(glmnet)
       # Bounds of zero can mess with the lambda sequence and fdev; ie nothing happens and if fdev is not
       #    zero, the path can stop
