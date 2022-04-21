@@ -18,7 +18,8 @@ rpair_gloss(
   pmax = min(dfmax * 2 + 20, nvars),
   penalty.factor = rep(1, nvars),
   maxit = 1e+05,
-  type.logistic = c("Newton", "modified.Newton")
+  type.logistic = c("Newton", "modified.Newton"),
+  use_glmnet = FALSE
 )
 }
 \arguments{
@@ -55,6 +56,9 @@ Default: NULL.}
 \item{type.logistic}{Only used by logistic loss. One of c("Newton", "modified.Newton"). If "Newton" then the
 exact hessian is used, while "modified.Newton" uses an upper-bound on the hessian and can be faster.
 Default: "Newton".}
+
+\item{use_glmnet}{Whether to use the glmnet function glmnet.control for handling changes needed for upper
+and lower limits. Only use if glment is installed. Uses rpair_control if FALSE. Default: FALSE.}
 }
 \value{
 An object with S3 class \code{"rpair"}, "*", where "*" is \code{"lognet"} or \code{"fishnet"}. Contains

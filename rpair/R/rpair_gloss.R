@@ -24,6 +24,8 @@
 #' @param type.logistic Only used by logistic loss. One of c("Newton", "modified.Newton"). If "Newton" then the
 #'    exact hessian is used, while "modified.Newton" uses an upper-bound on the hessian and can be faster.
 #'    Default: "Newton".
+#' @param use_glmnet Whether to use the glmnet function glmnet.control for handling changes needed for upper
+#'    and lower limits. Only use if glment is installed. Uses rpair_control if FALSE. Default: FALSE.
 #'
 #' @return An object with S3 class \code{"rpair"}, "*", where "*" is \code{"lognet"} or \code{"fishnet"}. Contains
 #' the following attributes:
@@ -63,7 +65,8 @@ rpair_gloss<-
             pmax=min(dfmax*2+20,nvars),
             penalty.factor=rep(1,nvars),
             maxit=100000,
-            type.logistic=c("Newton","modified.Newton")
+            type.logistic=c("Newton","modified.Newton"),
+            use_glmnet = FALSE
   ){
 
     # return call with fitted object
@@ -162,13 +165,21 @@ rpair_gloss<-
     cl=rbind(lower.limits,upper.limits)
     # where glmnet package is needed
     if(any(cl==0)){
-      require(glmnet)
       # Bounds of zero can mess with the lambda sequence and fdev; ie nothing happens and if fdev is not
       #    zero, the path can stop
-      fdev=glmnet::glmnet.control()$fdev
-      if(fdev!=0) {
-        glmnet::glmnet.control(fdev=0)
-        on.exit(glmnet::glmnet.control(fdev=fdev))
+      if(use_glmnet){
+        require(glmnet)
+        fdev=glmnet::glmnet.control()$fdev
+        if(fdev!=0) {
+          glmnet::glmnet.control(fdev=0)
+          on.exit(glmnet::glmnet.control(fdev=fdev))
+        }
+      }else{
+        fdev=rpair:::rpair_control_test()$fdev
+        if(fdev!=0){
+          rpair:::rpair_control_test(fdev=0)
+          on.exit(rpair:::rpair_control_test(fdev=fdev))
+        }
       }
     }
     storage.mode(cl)="double"
