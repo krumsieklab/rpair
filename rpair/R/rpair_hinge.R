@@ -21,7 +21,7 @@
 #' @param pf2 L2 penalty factor of length p used for adaptive LASSO or adaptive elastic net. See
 #'    \link[gcdnet]{gcdnet} for details. Default: rep(1, nvars).
 #' @param dfmax Limit the maximum number of variables in the model. Default: nvars+1.
-#' @param pmax Limit the maximum number of variables that can be nonzero. Default: min(dfmax*2+20, nvars).
+#' @param pmax Limit the maximum number of variables that can be nonzero. Default: min(ncol(x), nrow(x)).
 #' @param standardize Logical flag for x variable standardization. Default: FALSE.
 #' @param eps Convergence threshold for coordinate descent. Default: 1e-06.
 #' @param maxit Maximum number of passes over the data for all lambda values. Default: 1e+05
@@ -56,7 +56,7 @@ rpair_hinge <- function(x,
                         pf = rep(1, nvars),
                         pf2 = rep(1,nvars),
                         dfmax = nvars + 1,
-                        pmax = min(dfmax * 1.2, nvars),
+                        pmax= min(ncol(x), nrow(x)),
                         standardize = FALSE,
                         eps = 1e-06,
                         maxit = 1e+05,
@@ -75,6 +75,7 @@ rpair_hinge <- function(x,
     if (is.null(vnames)) vnames <- paste("V", seq(nvars), sep = "")
 
     # generate comparable pairs
+    is_surv = ncol(y)==2
     cp = y_to_pairs(y)
 
     ### Prepare all the generic arguments, then hand off to loss_type functions
@@ -87,7 +88,6 @@ rpair_hinge <- function(x,
     isd <- as.integer(standardize)
     eps <- as.double(eps)
     dfmax <- as.integer(dfmax)
-    pmax <- as.integer(pmax)
 
     # for now, not supporting user-provided exclude
     jd <- as.integer(0)
@@ -114,6 +114,10 @@ rpair_hinge <- function(x,
       ulam <- as.double(rev(sort(lambda)))
       nlam <- as.integer(length(lambda))
     }
+
+    # use either number of features or number of non-censored data points
+    if(is_surv) pmax = min(nvars, sum(y[,2]))
+    pmax=as.integer(pmax)
 
     ### Fit model
     fit <- switch(loss_type,

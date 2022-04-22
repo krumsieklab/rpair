@@ -18,7 +18,7 @@
 #' @param standardize Logical flag for x variable standardization. Default: FALSE.
 #' @param thresh Convergence threshold for coordinate descent. Default: 1e-7.
 #' @param dfmax Limit the maximum number of variables in the model. Default: nvars+1.
-#' @param pmax Limit the maximum number of variables that can be nonzero. Default: min(dfmax*2+20, nvars).
+#' @param pmax Limit the maximum number of variables that can be nonzero. Default: min(ncol(x), nrow(x)).
 #' @param penalty.factor Vector of penalty factors to apply to each coefficient. Default: rep(1, nvars).
 #' @param maxit Maximum number of passes over the data for all lambda values. Default: 100000.
 #' @param type.logistic Only used by logistic loss. One of c("Newton", "modified.Newton"). If "Newton" then the
@@ -62,7 +62,7 @@ rpair_gloss<-
             standardize=FALSE,
             thresh=1e-7,
             dfmax=nvars+1,
-            pmax=min(dfmax*2+20,nvars),
+            pmax=min(ncol(x), nrow(x)),
             penalty.factor=rep(1,nvars),
             maxit=100000,
             type.logistic=c("Newton","modified.Newton"),
@@ -84,6 +84,7 @@ rpair_gloss<-
     nobs0 = nrow(x)
 
     # generate comparable pairs
+    is_surv = ncol(y)==2
     cp = y_to_pairs(y)
     ncp = nrow(cp)
 
@@ -102,7 +103,6 @@ rpair_gloss<-
     weights=rep(1,nobs)
     loss_type=match.arg(loss_type)
     ne=as.integer(dfmax)
-    nx=as.integer(pmax)
     isd=as.integer(standardize)
     thresh=as.double(thresh)
 
@@ -116,6 +116,11 @@ rpair_gloss<-
       alpha=0
     }
     alpha=as.double(alpha)
+
+    # use either number of features or number of non-censored data points
+    if(is_surv) pmax = min(nvars, sum(y[,2]))
+    if(alpha < 0.5) pmax = nvars+1
+    nx=as.integer(pmax)
 
     if(any(penalty.factor==Inf)){
       exclude=c(exclude,seq(nvars)[penalty.factor==Inf])

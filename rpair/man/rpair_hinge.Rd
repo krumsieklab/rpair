@@ -15,7 +15,7 @@ rpair_hinge(
   pf = rep(1, nvars),
   pf2 = rep(1, nvars),
   dfmax = nvars + 1,
-  pmax = min(dfmax * 1.2, nvars),
+  pmax = min(ncol(x), nrow(x)),
   standardize = FALSE,
   eps = 1e-06,
   maxit = 1e+05,
@@ -50,7 +50,7 @@ Default: NULL.}
 
 \item{dfmax}{Limit the maximum number of variables in the model. Default: nvars+1.}
 
-\item{pmax}{Limit the maximum number of variables that can be nonzero. Default: min(dfmax*2+20, nvars).}
+\item{pmax}{Limit the maximum number of variables that can be nonzero. Default: min(ncol(x), nrow(x)).}
 
 \item{standardize}{Logical flag for x variable standardization. Default: FALSE.}
 

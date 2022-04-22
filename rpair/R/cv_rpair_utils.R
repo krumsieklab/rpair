@@ -1,9 +1,28 @@
+# cross-validation random folds
+get_folds <- function(y, nfolds){
+  y <- cbind(index = 1:length(y), y)
+  sorted <- y[order(y[,2]),]
+  fold_df <- create_fold_splits(sorted, nfolds)
+
+  # handle indices with unassigned folds
+  nas <- sum(is.na(fold_df$fold))
+  if(nas <= nfolds){
+    fold_df[is.na(fold_df$fold),"fold"] <- sample(seq(1:nfolds))[1:nas]
+  }else{
+    fold_df[is.na(fold_df$fold),"fold"] <- sample(seq(1:nfolds), size=nas, replace = T)
+  }
+  folds <- merge(sorted, fold_df, by="index")
+  folds
+}
+
 # cross-validation stratified folds
 get_stratified_folds <- function(S, nfolds){
   Smat <- as.data.frame(as.matrix(S))
   Smat <- cbind(index = 1:dim(Smat)[1], Smat)
-  sorted <- Smat[order(Smat$time),]
-  eventlist <- split(sorted, f=sorted$status)
+
+  # sort survial outcome by time variable
+  sorted <- Smat[order(Smat[,2]),]
+  eventlist <- split(sorted, f=sorted[,3])
   fold_df_list <- lapply(eventlist, create_fold_splits, nfolds)
   fold_df <- do.call(rbind.data.frame,fold_df_list)
 

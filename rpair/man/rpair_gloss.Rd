@@ -15,7 +15,7 @@ rpair_gloss(
   standardize = FALSE,
   thresh = 1e-07,
   dfmax = nvars + 1,
-  pmax = min(dfmax * 2 + 20, nvars),
+  pmax = min(ncol(x), nrow(x)),
   penalty.factor = rep(1, nvars),
   maxit = 1e+05,
   type.logistic = c("Newton", "modified.Newton"),
@@ -47,7 +47,7 @@ Default: NULL.}
 
 \item{dfmax}{Limit the maximum number of variables in the model. Default: nvars+1.}
 
-\item{pmax}{Limit the maximum number of variables that can be nonzero. Default: min(dfmax*2+20, nvars).}
+\item{pmax}{Limit the maximum number of variables that can be nonzero. Default: min(ncol(x), nrow(x)).}
 
 \item{penalty.factor}{Vector of penalty factors to apply to each coefficient. Default: rep(1, nvars).}
 

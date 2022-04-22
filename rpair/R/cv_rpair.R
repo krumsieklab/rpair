@@ -59,10 +59,15 @@ cv_rpair <- function(x,
   rpair.call[[1]] = as.name("rpair")
 
   if (is.null(foldid)){
+    is_surv = ncol(y)==2
     pairs = y_to_pairs(y)
     if(identical(pairs,y)) stop("The function cv_rpair does not support pairs as an input type without user-provided
                                 fold")
-    foldid_df = get_stratified_folds(y, nfolds)
+    if(is_surv){
+      foldid_df = get_stratified_folds(y, nfolds)
+    }else{
+      foldid_df = get_folds(y, nfolds)
+    }
     foldid = foldid_df$fold
   }else{
     nfolds = max(foldid)
