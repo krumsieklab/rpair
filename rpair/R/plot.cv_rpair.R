@@ -60,8 +60,8 @@ plot.cv_rpair <- function (cvobj, sign.lambda = 1, ggplot=T, unique_nz = F, nz_s
     plot_df <- data.frame(cvm = res_obj$cvm, cvup = res_obj$cvup, cvlo = res_obj$cvlo, nzero = res_obj$nzero)
     plot_df <- cbind(plot_df, log_lambda = sign.lambda*log(res_obj$lambda))
     plot_df <- plot_df[!is.na(plot_df$log_lambda),]
-    keep <- plot_df %>% group_by(nzero) %>% summarise(min(log_lambda)) %>% select(`min(log_lambda)`)
-    plot_df %<>% mutate(log_bool = !(log_lambda %in% keep$`min(log_lambda)`), nzero = replace(nzero, log_bool, ''))
+    #keep <- plot_df %>% group_by(nzero) %>% summarise(min(log_lambda)) %>% select(`min(log_lambda)`)
+    #plot_df %<>% mutate(log_bool = !(log_lambda %in% keep$`min(log_lambda)`), nzero = replace(nzero, log_bool, ''))
     text_y <- max(plot_df$cvup)+max(plot_df$cvup)*0.2
 
     g <- ggplot(plot_df, aes(x=log_lambda,y=cvm)) +
