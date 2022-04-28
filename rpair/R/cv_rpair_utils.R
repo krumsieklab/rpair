@@ -71,7 +71,7 @@ getopt_cv_rpair <- function (lambda, cvm, cvsd, cvname)
 {
   cvm = cvm[!is.na(lambda)]
   cvsd = cvsd[!is.na(lambda)]
-  if (match(cvname, "C-Index", 0)) cvm = -cvm
+  if (match(cvname, "cindex", 0)) cvm = -cvm
   cvmin = min(cvm, na.rm = TRUE)
   idmin = cvm <= cvmin
   lambda.min = max(lambda[idmin], na.rm = TRUE)
@@ -149,7 +149,7 @@ cv_deviance <- function(predmat, y, loss_type, fids, delta, use_houw){
 
 }
 
-cv_concordance <- function(predmat, y, foldid){
+cv_concordance <- function(predmat, y, foldid, use_houw){
   Yh = do.call(predmat, what = rbind)
   # folds, not fold ids
   z = unlist( lapply(seq(predmat), function(i) rep(i, nrow(predmat[[i]]))) )
@@ -157,8 +157,13 @@ cv_concordance <- function(predmat, y, foldid){
   ii = unlist(lapply(seq(predmat), function(i) foldid != i))
   # S for each fold
   Sf = rep(y, length(predmat))
-  cvfl = apply(Yh, 2, function(yh)
-    tryCatch(calc_conc(Sf, yh, ii, z)["houw",], error = function(er) c(NA,NA)))
+  if(use_houw){
+    cvfl = apply(Yh, 2, function(yh)
+      tryCatch(calc_conc(Sf, yh, ii, z)["houw",], error = function(er) c(NA,NA)))
+  }else{
+    cvfl = apply(Yh, 2, function(yh)
+      tryCatch(calc_conc(Sf, yh, ii, z)["test",], error = function(er) c(NA,NA)))
+  }
   cvfl
 }
 

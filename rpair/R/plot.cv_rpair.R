@@ -16,11 +16,14 @@
 #' @import ggplot2
 #'
 #' @export
-plot.cv_rpair <- function (cvobj, sign.lambda = 1, ggplot=T)
+plot.cv_rpair <- function (cvobj, sign.lambda = 1, ggplot=T, unique_nz = F, nz_size = 3)
 {
-  type_measure = names(cvobj$name)
-  if(type_measure == "cindex"){
-    res_obj <- cvobj[["conc"]]
+  if(cvobj$type_measure == "cindex"){
+    if(cvobj$houw){
+      res_obj <- cvobj[["h_conc"]]
+    }else{
+      res_obj <- cvobj[["s_conc"]]
+    }
     title <- ifelse(cvobj$houw, "Houwelingen Method", "Standard Method")
     if(ggplot){
       plot_df <- data.frame(cvm = res_obj$cvm[-1], cvup = res_obj$cvup[-1], cvlo = res_obj$cvlo[-1])
@@ -47,12 +50,18 @@ plot.cv_rpair <- function (cvobj, sign.lambda = 1, ggplot=T)
     }
   }
 
-  res_obj <- cvobj[["dev"]]
+  if(cvobj$houw){
+    res_obj <- cvobj[["h_dev"]]
+  }else{
+    res_obj <- cvobj[["s_dev"]]
+  }
   title <- ifelse(cvobj$houw, "Houwelingen Method", "Standard Method")
   if(ggplot){
     plot_df <- data.frame(cvm = res_obj$cvm, cvup = res_obj$cvup, cvlo = res_obj$cvlo, nzero = res_obj$nzero)
     plot_df <- cbind(plot_df, log_lambda = sign.lambda*log(res_obj$lambda))
     plot_df <- plot_df[!is.na(plot_df$log_lambda),]
+    keep <- plot_df %>% group_by(nzero) %>% summarise(min(log_lambda)) %>% select(`min(log_lambda)`)
+    plot_df %<>% mutate(log_bool = !(log_lambda %in% keep$`min(log_lambda)`), nzero = replace(nzero, log_bool, ''))
     text_y <- max(plot_df$cvup)+max(plot_df$cvup)*0.2
 
     g <- ggplot(plot_df, aes(x=log_lambda,y=cvm)) +
@@ -63,7 +72,7 @@ plot.cv_rpair <- function (cvobj, sign.lambda = 1, ggplot=T)
       xlab("Log(lambda)") +
       ylab(cvobj$name) +
       theme_minimal() +
-      annotate("text", x=plot_df$log_lambda, y=text_y, size=5,label=plot_df$nzero) +
+      annotate("text", x=plot_df$log_lambda, y=text_y, size=nz_size,label=plot_df$nzero) +
       ggtitle(title)
 
     g

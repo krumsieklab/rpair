@@ -96,6 +96,7 @@ cv_rpair_raw <- function(x, y, loss_type, lambda, nlambda, type.measure, nfolds,
                         huh = rpair_hinge(x, y, loss_type=loss_type, lambda = lambda, nlambda = nlambda, ...))
   rpair.object$call = rpair.call
   losstype = class(rpair.object)[[1]]
+  user_type_measure = type.measure
   type.measure = rpair_cvtype(type.measure, losstype)
 
   N = nrow(x)
@@ -120,22 +121,32 @@ cv_rpair_raw <- function(x, y, loss_type, lambda, nlambda, type.measure, nfolds,
   predmat = rpair_buildPredmat(outlist, nlambda, lambda, x, foldid,
                          alignment)
 
-  # calculate both deviance and concordance - type.measure will determine which one to plot
-  #  deviance
-  cvfl = cv_deviance(predmat, y, loss_type, foldid, delta = rpair.object$delta, use_houw = use_houwelingen)
-  dev_out = cv_stats(cvfl, lambda, nz)
-  lamin = with(dev_out, getopt_cv_rpair(lambda, cvm, cvsd, rpair_cvtype("deviance", losstype)))
-  dev_out = c(dev_out, as.list(lamin))
-  #  concordance
-  cvfl = cv_concordance(predmat, y, foldid)
-  conc_out = cv_stats(cvfl, lambda, nz, conc=T)
-  lamin = with(conc_out, getopt_cv_rpair(lambda, cvm, cvsd, rpair_cvtype("cindex", losstype)))
-  conc_out = c(conc_out, as.list(lamin))
+  # for convenience, calculate all possible combination of method (houwelingen or standard) and metric
+  #   (concordance and deviance)
+  metric_list <- list(h_dev = list(houw=T, type_measure="deviance"),
+                    h_conc = list(houw=T, type_measure="cindex"),
+                    s_dev = list(houw=F, type_measure="deviance"),
+                    s_conc = list(houw=F, type_measure="cindex"))
+  out <- lapply(names(metric_list), function(x){
+    type_measure <- metric_list[[x]]$type_measure
+    houw <- metric_list[[x]]$houw
+    if(type_measure == "deviance"){
+      cvfl = cv_deviance(predmat, y, loss_type, foldid, delta = rpair.object$delta, use_houw = houw)
+      out = cv_stats(cvfl, lambda, nz)
+    }else{
+      cvfl = cv_concordance(predmat, y, foldid, use_houw=houw)
+      out = cv_stats(cvfl, lambda, nz, conc=T)
+    }
+    lamin = with(out, getopt_cv_rpair(lambda, cvm, cvsd, rpair_cvtype(user_type_measure, losstype)))
+    out = c(out, as.list(lamin))
+  })
+  names(out) <- names(metric_list)
 
   # assemble cross-validation results
   cvname = names(type.measure)
   names(cvname) = type.measure
-  out = c(list(dev=dev_out, conc=conc_out), list(call = cv.call, name = cvname, rpair.fit = rpair.object, houw=use_houwelingen))
+  out = c(out, list(call = cv.call, name = cvname, type_measure = user_type_measure, rpair.fit = rpair.object,
+                    houw=use_houwelingen))
   if (keep)
     out = c(out, list(fit.preval = predmat, foldid = foldid, foldid_df = foldid_df))
   class(out) <- "cv_rpair"
