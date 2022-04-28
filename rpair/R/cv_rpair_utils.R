@@ -111,9 +111,9 @@ exp_loss <- function(x) exp(x)
 log_loss <- function(x) log(1+exp(x))
 huh_loss <- function(x, delta) ((1 - -1*x - 0.5 * delta) * (-1*x <= 1 - delta) + 0.5 * (1 - -1*x)^2/delta * (-1*x <= 1) * (-1*x > 1 - delta) )
 sqh_loss <- function(x) ((x >= 0) * (1+x)^2 )
-ffs <- list(fishnet = exp_loss, lognet = log_loss, phuhnet = huh_loss, psqhnet = sqh_loss)
 
-cv_deviance <- function(predmat, y, type_measure, fids, delta, use_houw){
+cv_deviance <- function(predmat, y, loss_type, fids, delta, use_houw){
+  ffs <- list(exp = exp_loss, log = log_loss, huh = huh_loss, sqh = sqh_loss)
   pi_all = y_to_pairs(y)
 
   lo =
@@ -135,10 +135,10 @@ cv_deviance <- function(predmat, y, type_measure, fids, delta, use_houw){
       # Z is a matrix of size:n_valid_pairs X n_lambda
 
       # pick loss function based on the model loss type
-      ff = ffs[[type_measure]] # ffs is the list of functions
+      ff = ffs[[loss_type]] # ffs is the list of functions
 
       # for each lambda calculate deviance for fold i
-      if(type_measure != "phuhnet"){
+      if(loss_type != "phuhnet"){
         colMeans( ff(Z), na.rm = T )
       }else{
         colMeans( ff(Z, delta), na.rm = T )
@@ -199,9 +199,9 @@ calc_conc <- function(S, yh, ii, folds){
   )
 }
 
-cv_stats <- function (cvfl, lambda, nz, houw=F)
+cv_stats <- function (cvfl, lambda, nz, conc=F)
 {
-  if(houw){
+  if(conc){
     cvm = cvfl[1,]
     cvsd = sqrt(cvfl[2,])
   }else{

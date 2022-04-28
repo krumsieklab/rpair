@@ -120,19 +120,24 @@ cv_rpair_raw <- function(x, y, loss_type, lambda, nlambda, type.measure, nfolds,
   predmat = rpair_buildPredmat(outlist, nlambda, lambda, x, foldid,
                          alignment)
 
-  if(type.measure != "cindex"){
-    cvfl = cv_deviance(predmat, y, type.measure, foldid, delta = rpair.object$delta, use_houw = use_houwelingen)
-  }else{
-    cvfl = cv_concordance(predmat, y, foldid)
-  }
-  out = cv_stats(cvfl, lambda, nz, use_houwelingen)
+  # calculate both deviance and concordance - type.measure will determine which one to plot
+  #  deviance
+  cvfl = cv_deviance(predmat, y, loss_type, foldid, delta = rpair.object$delta, use_houw = use_houwelingen)
+  dev_out = cv_stats(cvfl, lambda, nz)
+  lamin = with(dev_out, getopt_cv_rpair(lambda, cvm, cvsd, rpair_cvtype("deviance", losstype)))
+  dev_out = c(dev_out, as.list(lamin))
+  #  concordance
+  cvfl = cv_concordance(predmat, y, foldid)
+  conc_out = cv_stats(cvfl, lambda, nz, conc=T)
+  lamin = with(conc_out, getopt_cv_rpair(lambda, cvm, cvsd, rpair_cvtype("cindex", losstype)))
+  conc_out = c(conc_out, as.list(lamin))
+
+  # assemble cross-validation results
   cvname = names(type.measure)
   names(cvname) = type.measure
-  out = c(out, list(call = cv.call, name = cvname, rpair.fit = rpair.object, houw=use_houwelingen))
+  out = c(list(dev=dev_out, conc=conc_out), list(call = cv.call, name = cvname, rpair.fit = rpair.object, houw=use_houwelingen))
   if (keep)
     out = c(out, list(fit.preval = predmat, foldid = foldid, foldid_df = foldid_df))
-  lamin = with(out, getopt_cv_rpair(lambda, cvm, cvsd, cvname))
-  out = c(out, as.list(lamin))
   class(out) <- "cv_rpair"
 
   out
