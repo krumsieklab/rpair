@@ -17,6 +17,7 @@
 #' @param grouped Not implemented in this version. Default: FALSE.
 #' @param keep If keep=TRUE, returns a list of fitted values for each fold and a corresponding list of foldids.
 #'    Default: FALSE.
+#' @param use_houwelingen Whether to use the houwelingen method for calculating
 #' @param \dots Additional parameters to pass to the rpair_gloss or rpair_hinge function.
 #'
 #' @return An object of class "cv_rpair" containing the following list of values:
@@ -33,6 +34,7 @@ cv_rpair <- function(x,
                      alignment = c("fraction", "lambda"),
                      grouped = FALSE,
                      keep = FALSE,
+                     use_houwelingen = TRUE,
                      ...
 ){
 
@@ -77,7 +79,7 @@ cv_rpair <- function(x,
     stop("nfolds must be bigger than 3; nfolds=10 recommended")
   cv_rpair_raw(x, y, loss_type, lambda, nlambda, type.measure,
                    nfolds, foldid, alignment, grouped, keep,
-                   rpair.call, cv.call, foldid_df, ...)
+                   rpair.call, cv.call, foldid_df, use_houwelingen, ...)
 
 }
 
@@ -85,7 +87,7 @@ cv_rpair <- function(x,
 
 cv_rpair_raw <- function(x, y, loss_type, lambda, nlambda, type.measure, nfolds,
                          foldid, alignment, grouped, keep, rpair.call,
-                         cv.call, foldid_df, ...){
+                         cv.call, foldid_df, use_houwelingen, ...){
 
   rpair.object = switch(loss_type,
                         log = rpair_gloss(x, y, loss_type=loss_type, lambda = lambda, nlambda = nlambda, ...),
@@ -118,26 +120,15 @@ cv_rpair_raw <- function(x, y, loss_type, lambda, nlambda, type.measure, nfolds,
   predmat = rpair_buildPredmat(outlist, nlambda, lambda, x, foldid,
                          alignment)
 
-  pi_all = y_to_pairs(y)
   if(type.measure != "cindex"){
-    cvfl = cv_loss(predmat, pi_all, type.measure, foldid, delta = rpair.object$delta)
-    houw=F
+    cvfl = cv_deviance(predmat, y, type.measure, foldid, delta = rpair.object$delta, use_houw = use_houwelingen)
   }else{
-    Yh = do.call(predmat, what = rbind)
-    # folds, not fold ids
-    z = unlist( lapply(seq(predmat), function(i) rep(i, nrow(predmat[[i]]))) )
-    # inds of training sets
-    ii = unlist(lapply(seq(predmat), function(i) foldid != i))
-    # S for each fold
-    Sf = rep(y, length(predmat))
-    cvfl = apply(Yh, 2, function(yh)
-      tryCatch(cv_houw_loss(Sf, yh, ii, z)["houw",], error = function(er) c(NA,NA)))
-    houw=T
+    cvfl = cv_concordance(predmat, y, foldid)
   }
-  out = cv_stats(cvfl, lambda, nz, houw)
+  out = cv_stats(cvfl, lambda, nz, use_houwelingen)
   cvname = names(type.measure)
   names(cvname) = type.measure
-  out = c(out, list(call = cv.call, name = cvname, rpair.fit = rpair.object, houw=houw))
+  out = c(out, list(call = cv.call, name = cvname, rpair.fit = rpair.object, houw=use_houwelingen))
   if (keep)
     out = c(out, list(fit.preval = predmat, foldid = foldid, foldid_df = foldid_df))
   lamin = with(out, getopt_cv_rpair(lambda, cvm, cvsd, cvname))

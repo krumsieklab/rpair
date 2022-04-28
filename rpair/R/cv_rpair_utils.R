@@ -111,21 +111,24 @@ exp_loss <- function(x) exp(x)
 log_loss <- function(x) log(1+exp(x))
 huh_loss <- function(x, delta) ((1 - -1*x - 0.5 * delta) * (-1*x <= 1 - delta) + 0.5 * (1 - -1*x)^2/delta * (-1*x <= 1) * (-1*x > 1 - delta) )
 sqh_loss <- function(x) ((x >= 0) * (1+x)^2 )
-#conc_loss <- function(x) 1*(x<0)
+ffs <- list(fishnet = exp_loss, lognet = log_loss, phuhnet = huh_loss, psqhnet = sqh_loss)
 
-cv_loss <- function(predmat, pi_all, type_measure, fids, delta){
-  ffs <- list(fishnet = exp_loss, lognet = log_loss, phuhnet = huh_loss, psqhnet = sqh_loss)#, cindex = conc_loss)
+cv_deviance <- function(predmat, y, type_measure, fids, delta, use_houw){
+  pi_all = y_to_pairs(y)
 
   lo =
     sapply(seq(unique(fids)), function(i){
-      # fold i
-      # training set samples
-      j = which(fids != i)
-
-      # all_pairs - training_set_pairs
-      pir =  pi_all[!( (pi_all[,1] %in% j) & (pi_all[,2] %in% j) ),]
-      npairs = nrow(pir)
-      # KC: do we want to keep this number?
+      if(use_houw){
+        # training set samples
+        j = which(fids != i)
+        # all_pairs - training_set_pairs
+        pir =  pi_all[!( (pi_all[,1] %in% j) & (pi_all[,2] %in% j) ),]
+      }else{
+        # test set samples
+        j = which(fids == i)
+        # test_pairs only
+        pir = pi_all[( (pi_all[,1] %in% j) & (pi_all[,2] %in% j) ),]
+      }
 
       # loss margin z i.e. loss_function(z)
       Z = predmat[[i]][pir[,1],] -  predmat[[i]][pir[,2],]
@@ -135,7 +138,6 @@ cv_loss <- function(predmat, pi_all, type_measure, fids, delta){
       ff = ffs[[type_measure]] # ffs is the list of functions
 
       # for each lambda calculate deviance for fold i
-      # colMeans(exp_loss(Z),na.rm = T)
       if(type_measure != "phuhnet"){
         colMeans( ff(Z), na.rm = T )
       }else{
@@ -147,27 +149,20 @@ cv_loss <- function(predmat, pi_all, type_measure, fids, delta){
 
 }
 
-cv_stats <- function (cvfl, lambda, nz, houw=F)
-{
-  if(houw){
-    cvm = cvfl[1,]
-    cvsd = sqrt(cvfl[2,])
-  }else{
-    cvm = rowMeans(cvfl, na.rm = T)
-    cvsd = apply(cvfl, 1, sd, na.rm = T) / sqrt(ncol(cvfl))
-  }
-  nas = is.na(cvsd)
-  if (any(nas)) {
-    lambda = lambda[!nas]
-    cvm = cvm[!nas]
-    cvsd = cvsd[!nas]
-    nz = nz[!nas]
-  }
-  list(lambda = lambda, cvm = cvm, cvsd = cvsd, cvup = cvm +
-         cvsd, cvlo = cvm - cvsd, nzero = nz)
+cv_concordance <- function(predmat, y, foldid){
+  Yh = do.call(predmat, what = rbind)
+  # folds, not fold ids
+  z = unlist( lapply(seq(predmat), function(i) rep(i, nrow(predmat[[i]]))) )
+  # inds of training sets
+  ii = unlist(lapply(seq(predmat), function(i) foldid != i))
+  # S for each fold
+  Sf = rep(y, length(predmat))
+  cvfl = apply(Yh, 2, function(yh)
+    tryCatch(calc_conc(Sf, yh, ii, z)["houw",], error = function(er) c(NA,NA)))
+  cvfl
 }
 
-cv_houw_loss <- function(S, yh, ii, folds){
+calc_conc <- function(S, yh, ii, folds){
 
   df = data.frame(S=S, yh=yh, z=folds)
   # concordance on full data
@@ -202,4 +197,24 @@ cv_houw_loss <- function(S, yh, ii, folds){
     d = c(full = d0, train = d1, houw = dh, test = d2$concordance),
     v = c(full = v0, train = v1, houw = vh, test = d2$var )
   )
+}
+
+cv_stats <- function (cvfl, lambda, nz, houw=F)
+{
+  if(houw){
+    cvm = cvfl[1,]
+    cvsd = sqrt(cvfl[2,])
+  }else{
+    cvm = rowMeans(cvfl, na.rm = T)
+    cvsd = apply(cvfl, 1, sd, na.rm = T) / sqrt(ncol(cvfl))
+  }
+  nas = is.na(cvsd)
+  if (any(nas)) {
+    lambda = lambda[!nas]
+    cvm = cvm[!nas]
+    cvsd = cvsd[!nas]
+    nz = nz[!nas]
+  }
+  list(lambda = lambda, cvm = cvm, cvsd = cvsd, cvup = cvm +
+         cvsd, cvlo = cvm - cvsd, nzero = nz)
 }
