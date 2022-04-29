@@ -199,7 +199,7 @@ calc_conc <- function(S, yh, ii, folds){
 
   d2 =  concordance(S~yh+strata(z), df[!ii,], reverse = T)
   cbind(
-    d = c(full = d0, train = d1, houw = dh, test = d2$concordance),
+    d = c(full = 1-d0, train = 1-d1, houw = 1-dh, test = 1-d2$concordance),
     v = c(full = v0, train = v1, houw = vh, test = d2$var )
   )
 }
