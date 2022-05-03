@@ -79,7 +79,7 @@ res = structure(names(nodes), names = names(nodes)) %>% lapply(function(i){
 })
 save(file = 'external validation/results_ext.Rdata', res)  
 
-# df = do.call(rbind, res)
+ # df = do.call(rbind, res)
 # ggplot(df, aes(x = model, y = concordance, color = model)) + 
 #   geom_pointrange(aes(ymin = concordance - se, ymax = concordance + se)) +
 #   geom_point(size = 2) + 
