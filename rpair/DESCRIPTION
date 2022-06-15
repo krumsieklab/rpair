@@ -4,13 +4,26 @@ Title: Regularized PAIrwise Ranking survival analysis
 Version: 0.1.0
 Authors@R: c(
     person("Mustafa", "Buyukozkan",  email="mub4004@med.cornell.edu", role=c("aut", "cre")),
-    person("Kelsey", "Chetnik", role=c("aut")))
+    person("Kelsey", "Chetnik", role=c("aut")),
+    person("Jerome", "Friedman", role=c("aut")),
+    person("Trevor", "Hastie", role=c("aut")),
+    person("Rob", "Tibshirani", role=c("aut")),
+    person("Balasubramanian", "Narasimhan", role=c("aut")),
+    person("Kenneth","Tay",role=c("aut")),
+    person("Noah", "Simon", role=c("aut")),
+    person("Junyang", "Qian", role=c("ctb")),
+    person("James", "Yang", role=c("aut")))
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
 Depends: 
-    ggplot2,
     R (>= 2.10)
-License: What license is it under?
+Imports:
+    ggplot2,
+    survival
+Suggests:
+    mcsurvdata,
+    magrittr
+License: GPL-2
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1

@@ -37,52 +37,26 @@ library(rpair)
 library(magrittr)
 library(survival)
 
-set.seed(42)
-
-# generate survival data
-ks = 100
-
-# number of features
-n1 = 20 # n informative features
-n2 = 40 # n noisy features
-
-# coefficients
-b = c(exp(runif(n1)), seq(n2)*0) %>% round(2)
-
-# generate data matrix
-X = matrix(rnorm((n1+n2)*100), nrow = ks) %>% scale
-# generate survival times
-S = Surv(exp(scale(X %*% b)), sample(c(F,T),ks, T) )
-colnames(S) = c("time", "status")
-
-fids = sample(4, ks, T) # [JK, can this be deleted?]
-
-# [JK, @mubu, I think you said this can be deleted?]
-alpha = 1
-# the maximum number of variables ever to be nonzero
-pmx = min(ncol(X), sum(S[,2]))
-if(alpha < 0.5 ) pmx = ncol(X)+1
-
+# load example data
+x <- rpair::ds1_x
+y <- rpair::ds1_y
 
 # run cross-validated rpair
-cv = cv_rpair(X, S, foldid=fids, nlambda=25, loss_type="exp", alpha = alpha,
-                pmax = pmx, alignment = "fraction", keep = T)
+set.seed(44)
+cv = cv_rpair(x, y)
 
 # lambda plot
 plot(cv)
 
 # apply model to input data
-pr = predict(cv, X)
+pr = predict(cv, x)
 # show predicted survival times
-pr[1:5]
+pr[1:10]
 ```
-
-[JK, @Kelsey, it looks like the vector below is not actually an output of the code above. Code is 1:5, but below is 10 entries]
 
 <img src="tutorials/imgs/get_start_plot.png" width="665" height="455" />
 
-    [1]  0.79511265 -1.52421967 -0.53790436 -0.74291613 -0.27140260  0.01558794 -0.57333305  1.50476447  1.01263183
-    [10] -1.13966754
+    [1]  1.8386803 -2.7819668 -0.9915281 -1.2221169 -0.5459928  0.2180884 -0.6377641  2.6466038  1.8887652 -2.5777407
 
 
 
@@ -96,4 +70,4 @@ are provided in the following tutorials:
 
 -   [Tutorial 2: the cv_rpair function](https://github.com/krumsieklab/rpair/blob/master/tutorials/02_the_cv_rpair_function.md)
 
--   [Tutorial 3: analysis of dataset GSE3493NA ](https://github.com/krumsieklab/rpair/blob/master/tutorials/03_analysis_of_dataset_GSE3493NA.md)
+-   [Tutorial 3: analysis of dataset GSE3493NA ](https://github.com/krumsieklab/rpair/blob/master/tutorials/03_analysis_of_dataset_GSE37892.md)

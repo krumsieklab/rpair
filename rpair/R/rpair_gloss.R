@@ -45,8 +45,8 @@
 #'
 #'
 #' @examples
-#' efit = rpair_gloss(surv_x, surv_cp, pmax = 50, loss_type = "exp")
-#' lfit = rpair_gloss(surv_x, surv_cp, pmax = 50, loss_type = "log")
+#' efit = rpair_gloss(ds1_x, ds1_y, loss_type = "exp")
+#' lfit = rpair_gloss(ds1_x, ds1_y, loss_type = "log")
 #'
 #' @author mubu, KC
 #'
@@ -168,11 +168,12 @@ rpair_gloss<-
     }
     else upper.limits=upper.limits[seq(nvars)]
     cl=rbind(lower.limits,upper.limits)
-    # where glmnet package is needed
+    # injects parameters into fortran code
     if(any(cl==0)){
       # Bounds of zero can mess with the lambda sequence and fdev; ie nothing happens and if fdev is not
       #    zero, the path can stop
       if(use_glmnet){
+        # can use glmnet package to perform this if available
         require(glmnet)
         fdev=glmnet::glmnet.control()$fdev
         if(fdev!=0) {
@@ -180,7 +181,7 @@ rpair_gloss<-
           on.exit(glmnet::glmnet.control(fdev=fdev))
         }
       }else{
-        fdev=rpair:::rpair_control_test()$fdev
+        fdev=rpair:::rpair_control()$fdev
         if(fdev!=0){
           rpair:::rpair_control_test(fdev=0)
           on.exit(rpair:::rpair_control_test(fdev=fdev))
@@ -189,8 +190,6 @@ rpair_gloss<-
     }
     storage.mode(cl)="double"
     ### end check on limits
-    # glmnet.control function injects parameters into fortran code
-    # fix this at the end if there is time
 
     ### Fit model
     fit <-
@@ -368,7 +367,7 @@ pfishnetfit <-
 
     outlist=getcoef(fit,nvars,nx,vnames)
     dev=fit$dev[seq(fit$lmu)]
-    outlist=c(outlist,list(npasses=fit$nlp,jerr=fit$jerr,dev.ratio=dev,nulldev=fit$nulldev))#,offset=is.offset))
+    outlist=c(outlist,list(npasses=fit$nlp,jerr=fit$jerr,dev.ratio=dev,nulldev=fit$nulldev))
 
     class(outlist)="fishnet"
     outlist
