@@ -60,11 +60,6 @@ coef(surv2_fit)[1:10]
 # @mubu - generate random data with ordinal outcome
 ```
 
-## Factor outcome
-```r
-# @mubu - generate random data qith factor outcome
-```
-
 ## Comparable pairs
 Users can also provide comparable pairs as direct input to the cv_rpair (and rpair) function(s). The following
 example takes the 2-column survival outcome produced in the first example and uses the internal rpair function to
