@@ -45,7 +45,7 @@ coef(surv2_fit)[1:10]
 [10] -0.162762181
 
 
-## Survival outcome (3 columns)
+## Survival outcome (3 columns e.g. count type Surv object)
 ```r
 # @mubu - generate random data with 3-column survival outcome
 ```
