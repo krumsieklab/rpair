@@ -14,11 +14,9 @@ library(survival)
 
 ## Generate Random Survival Dataset
 ```r
-set.seed(41)
-x = matrix(rnorm(40000),ncol = 200 )
-S = Surv(sample(nrow(x)), rbinom(nrow(x),1,prob = 0.7))
-
-cp = rpair:::y_to_pairs.Surv(S)
+# load example data
+x = rpair::rpair_ds2_x
+y = rpair::rpair_ds2_y
 ```
 
 ```r
@@ -33,8 +31,7 @@ x[1:4,1:4]
 
 ```r
 # first five rows of survival data
-colnames(S) <- c("time", "status")
-as.matrix(S)[1:5,] #[JK, isn't this a much nicer display? S[1:5]  ]
+y[1:5,]
 ```
          time status
     [1,]   54      1

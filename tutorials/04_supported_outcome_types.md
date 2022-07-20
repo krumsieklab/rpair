@@ -3,7 +3,8 @@ Tutorial 4: supported outcome types
 
 This tutorial showcases each of the different types of outcome / response variables supported by the rpair. These are: 
 survival outcome (2 columns), survival outcome (3 columns), numeric outcome, ordinal outcome, factor outcome, and 
-comparable pairs. Each example below creates a simulated dataset of the corresponding type.
+comparable pairs. For this example, we first create a single simulated dataset and a vector of coefficients. We then
+use these to generate the specific outcomes in each of their corresponding sections.
 
 
 ``` r
@@ -12,7 +13,7 @@ library(magrittr)
 library(survival)
 ```
 
-## Survival outcome (2 columns)
+## Generate Random Data
 ```r
 set.seed(73)
 
@@ -28,8 +29,12 @@ b = c(exp(runif(n1)), seq(n2)*0) %>% round(2)
 
 # generate data matrix
 X = matrix(rnorm((n1+n2)*100), nrow = ks) %>% scale
-# generate survival times
-S = Surv(exp(scale(X %*% b)), sample(c(F,T),ks, T) )
+```
+
+## Survival outcome (2 columns)
+```r
+# generate two-column survival object
+S = Surv(exp(scale(X %*% b))*10, sample(c(F,T),ks, T) )
 colnames(S) = c("time", "status")
 
 surv2_fit = cv_rpair(X, S)
@@ -47,17 +52,50 @@ coef(surv2_fit)[1:10]
 
 ## Survival outcome (3 columns e.g. count type Surv object)
 ```r
-# @mubu - generate random data with 3-column survival outcome
+# generate three-column surival object
+S = Surv(rep(0, ks), exp(scale(X %*% b))*10, sample(c(F,T),ks, T) )
+#colnames(S) = c("start", "stop", "status")
+
+surv3_fit = cv_rpair(X, S)
+
+plot(surv3_fit)
+
+coef(surv3_fit)
+
+pred(surv3_fit, X)
 ```
 
 ## Numeric outcome
 ```r
-# @mubu - generate random data with continuous outcome
+# numeric outcome here is same as time and stop for two survival outcomes
+y = exp(scale(X %*% b))*10
+
+num_fit = cv_rpair(X, y)
+
+plot(num_fit)
+
+coef(num_fit)
+
+pred(num_fit, X)
 ```
 
 ## Ordinal outcome
 ```r
-# @mubu - generate random data with ordinal outcome
+# create ordinal outcome 
+y = scale(X %*% b)
+y = (y - min(y) + 10)^2
+# number of levels for ordinal outcome
+l = 4
+# ordinal levels
+y = cut(y, breaks = seq(min(y), max(y), length.out = l+1), include.lowest = T) %>% as.numeric
+
+ord_fit = cv_rpair(X, y)
+
+plot(ord_fit)
+
+coef(ord_fit)
+
+pred(ord_fit, X)
 ```
 
 ## Comparable pairs
@@ -65,23 +103,9 @@ Users can also provide comparable pairs as direct input to the cv_rpair (and rpa
 example takes the 2-column survival outcome produced in the first example and uses the internal rpair function to
 generate comparable pairs.
 
-IMPORTANT NOTE: The function cv_rpair does not support the use of comparable pairs without user-provided folds. This is because important information for generating stratified folds (for example, in the case of comparable pairs generated from survival data) can be lost when only providing the pairs.
+IMPORTANT NOTE: The function cv_rpair does not support the use of comparable pairs without user-provided folds. This is because important information for generating stratified folds (for example, in the case of comparable pairs generated from survival data) can be lost when providing only the pairs.
+
 ```r
-set.seed(73)
-
-# generate survival data
-ks = 100
-
-# number of features
-n1 = 20 # n informative features
-n2 = 40 # n noisy features
-
-# coefficients
-b = c(exp(runif(n1)), seq(n2)*0) %>% round(2)
-
-# generate data matrix
-X = matrix(rnorm((n1+n2)*100), nrow = ks) %>% scale
-
 # generate survival times
 S = Surv(exp(scale(X %*% b)), sample(c(F,T),ks, T) )
 colnames(S) = c("time", "status")
@@ -93,8 +117,12 @@ cp = rpair:::y_to_pairs(S)
 fids = rpair:::get_stratified_folds(S, nfolds=5)
 
 # fit model
-surv2_fit = cv_rpair(X, cp, foldid=fids$fold)
+cp_fit = cv_rpair(X, cp, foldid=fids$fold)
 
 # get log lambda plot and beta coefficients
-# @ KC - add plot and coef() results
+plot(cp_fit)
+
+coef(cp_fit)
+
+pred(cp_fit, X)
 ```
