@@ -8,11 +8,16 @@
 #'
 #' @returns A matrix of coefficients for the provided lambda.
 #'
+#' @examples
+#' efit = cv_rpair(ds1_x, ds1_y, nlambda=25, loss_type="exp")
+#' ec = coef(efit, s="lambda.1se")
+#'
 #' @method coef cv_rpair
 #'
 #' @export
 coef.cv_rpair <- function (object, s = c("lambda.1se", "lambda.min"))
 {
+  # determine user-selected type measure and method
   type_measure <- object$type_measure
   houw <- object$houw
   if(type_measure == "cindex" && houw){
@@ -26,6 +31,8 @@ coef.cv_rpair <- function (object, s = c("lambda.1se", "lambda.min"))
   }else{
     stop("Unrecognized value(s) for type_measure and / or houw in cv_rpair object.")
   }
+
+  # extract lambda of interest
   if (is.numeric(s))
     lambda = s
   else if (is.character(s)) {
@@ -33,5 +40,7 @@ coef.cv_rpair <- function (object, s = c("lambda.1se", "lambda.min"))
     lambda = res_obj[[s]]
   }
   else stop("Invalid form for s")
+
+  # call coef.rpair on master fit
   coef(object$rpair.fit, s = lambda)
 }

@@ -9,8 +9,8 @@
 #' @returns A matrix of coefficients.
 #'
 #' @examples
-#' efit = rpair_gloss(surv_x, surv_cp, pmax = 50, loss_type = "exp")
-#' coefmat = coef(efit)
+#' efit = rpair_gloss(rpair::ds1_x, rpair::ds1_y)
+#' coefmat = as.matrix(coef(efit))
 #'
 #' @method coef rpair
 #'

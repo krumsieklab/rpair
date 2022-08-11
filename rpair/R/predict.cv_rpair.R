@@ -1,7 +1,8 @@
 #' Predict or extract values from cv_rpair object
 #'
-#' Predicts fitted values from a cross-validated rapir object given a matrix of new values. Can also extract and
-#' return coefficient and nonzero lists.
+#' Predicts fitted values from a cross-validated rapir object given a matrix of new values. Can
+#' also extract and return coefficient and nonzero lists. Function internally calls predict.rpair
+#' on the cv_rpair master fit object.
 #'
 #' @param object A fitted cv_rpair object.
 #' @param newx A matrix of new values. This argument is not required for type=c("coefficients", "nonzero").
@@ -9,7 +10,7 @@
 #'    s="lambda.1se".
 #' @param \dots Additional parameters to pass to the predict function.
 #'
-#' @return The object returned depends on the values passed via ... .
+#' @return The object returned depends on the values passed via ... . See predict.rpair for details.
 #'
 #' @author KC
 #'
@@ -18,6 +19,7 @@
 #' @export
 predict.cv_rpair <- function (object, newx, s = c("lambda.1se", "lambda.min"), ...)
 {
+  # select result object based on type_measure and houw values
   type_measure <- object$type_measure
   houw <- object$houw
   if(type_measure == "cindex" && houw){
@@ -31,6 +33,8 @@ predict.cv_rpair <- function (object, newx, s = c("lambda.1se", "lambda.min"), .
   }else{
     stop("Unrecognized value(s) for type_measure and / or houw in cv_rpair object.")
   }
+
+  # determine value of s
   if (is.numeric(s))
     lambda = s
   else if (is.character(s)) {
@@ -39,5 +43,7 @@ predict.cv_rpair <- function (object, newx, s = c("lambda.1se", "lambda.min"), .
     names(lambda) = s
   }
   else stop("Invalid form for s")
+
+  # call predict.rpair
   predict(object$rpair.fit, newx, s = lambda, ...)
 }

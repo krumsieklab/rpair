@@ -20,7 +20,7 @@ y_to_pairs <- function(y){
   else if( ncol(y) == 2 ){ ytype = "pairs"; return(y)}
   else stop("y is not of a recognazied type for pairwise ranking")
 
-  UseMethod("y_to_pairs")
+  UseMethod("y_to_pairs", y)
 
 }
 
@@ -101,12 +101,4 @@ y_to_pairs.numeric <- function(q){
     stop("doesn't support numeric with only one value")
   return(which(outer(q, q, ">"), arr.ind = T))
 }
-
-# M: keep for now
-# y_to_pairs.matrix <- function(m){
-#   # if( identical(colnames(m),c("time","status")) | identical(colnames(m),c("start", "stop", "status")) ){
-#   #   return(y_to_pairs.Surv(m))
-#   # }
-#   m
-# }
 

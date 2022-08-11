@@ -75,7 +75,7 @@ rpair_hinge <- function(x,
     if (is.null(vnames)) vnames <- paste("V", seq(nvars), sep = "")
 
     # generate comparable pairs
-    is_surv = ncol(y)==2
+    is_surv = is_survival(y)
     cp = y_to_pairs(y)
 
     ### Prepare all the generic arguments, then hand off to loss_type functions
@@ -116,7 +116,7 @@ rpair_hinge <- function(x,
     }
 
     # use either number of features or number of non-censored data points
-    if(is_surv) pmax = min(nvars, sum(y[,2]))
+    if(is_surv) pmax = min(nvars, sum(y[,ncol(y)]))
     pmax=as.integer(pmax)
 
     ### Fit model
@@ -159,22 +159,27 @@ rpair_hinge <- function(x,
 #' @param vnames Column names of the input matrix.
 #' @param rk Half the number of pairs.
 #'
+#' @returns List of results, including: beta, df, dim, lambda, delta, npasses, and jerr. See rpair
+#'    documentation for details.
+#'
 #' @author mubu, KC
 #'
 #' @noRd
 phuhnetfit <- function( x, cp, nlam, flmin, ulam, isd, eps, dfmax, pmax, jd, pf, pf2, maxit, lam2,
-                     delta, nobs, nvars, vnames, rk = nrow(cp)%/%2
+                        delta, nobs, nvars, vnames, rk = nrow(cp)%/%2
 ){
 
   # modify cp accordingly
   cp = rbind( cp[1:rk,2:1], cp[-(1:rk),])
   y = c(rep(1,rk),rep(-1, nrow(cp)-rk))
   y = cbind(c0= -y, c1 =y)
-  # ---
 
+  # prepare arguments
   if (delta < 0)
     stop("delta must be non-negative")
   delta <- as.double(delta)
+
+  # call Fortran function
   fit <- .Fortran("phuhnet", delta, lam2, nobs, nvars,
                   as.double(x), as.double(y), jd, pf, pf2, dfmax, pmax,
                   nlam, flmin, ulam, eps, isd, maxit, nalam = integer(1),
@@ -184,9 +189,11 @@ phuhnetfit <- function( x, cp, nlam, flmin, ulam, isd, eps, dfmax, pmax, jd, pf,
                   jerr = integer(1))
   class(fit) = c("gcdnetfit",class(fit))
 
+  # make any Fortran errors human readable
   errmsg <- jerr(fit, maxit, pmax, "huh")
   switch(paste(errmsg$n), `1` = stop(errmsg$msg, call. = FALSE), `-1` = print(errmsg$msg, call. = FALSE))
 
+  # extract results from Fortran fit object
   outlist <- getcoef(fit,nvars ,pmax, vnames)
   outlist <- c(outlist, list(delta=delta, npasses = fit$npass, jerr = fit$jerr))
   class(outlist) <- c("phuhnet")
@@ -216,19 +223,22 @@ phuhnetfit <- function( x, cp, nlam, flmin, ulam, isd, eps, dfmax, pmax, jd, pf,
 #' @param vnames Column names of the input matrix.
 #' @param rk Half the number of pairs.
 #'
+#' @returns List of results, including: beta, def, dim, lambda, npasses, and jerr. See rpair
+#'    documentation for details.
+#'
 #' @author mubu, KC
 #'
 #' @noRd
 psqhnetfit <- function( x, cp, nlam, flmin, ulam, isd, eps, dfmax, pmax, jd, pf, pf2, maxit, lam2,
-                     nobs, nvars, vnames, rk = nrow(cp)%/%2
+                        nobs, nvars, vnames, rk = nrow(cp)%/%2
 ){
 
   # modify cp accordingly
   cp = rbind( cp[1:rk,2:1], cp[-(1:rk),])
   y = c(rep(1,rk),rep(-1, nrow(cp)-rk))
   y = cbind(c0= -y, c1 =y)
-  # ---
 
+  # call Fortran function
   fit <- .Fortran("psqhnet", lam2, nobs, nvars, as.double(x),
                   as.double(y), jd, pf, pf2, dfmax, pmax, nlam, flmin,
                   ulam, eps, isd, maxit, nalam = integer(1), b0 = double(nlam),
@@ -236,11 +246,13 @@ psqhnetfit <- function( x, cp, nlam, flmin, ulam, isd, eps, dfmax, pmax, jd, pf,
                   alam = double(nlam), npass = integer(1),
                   as.integer(nrow(cp)), as.integer(cp),
                   jerr = integer(1))
-
   class(fit) = c("gcdnetfit",class(fit))
+
+  # make any Fortan errors human-readable
   errmsg <- jerr(fit, maxit, pmax, "sqh")
   switch(paste(errmsg$n), `1` = stop(errmsg$msg, call. = FALSE), `-1` = print(errmsg$msg, call. = FALSE))
 
+  # extract results from Fortran fit object
   outlist <- getcoef(fit,nvars ,pmax, vnames)
   outlist <- c(outlist, list(npasses = fit$npass, jerr = fit$jerr))
   class(outlist) <- c("psqhnet")

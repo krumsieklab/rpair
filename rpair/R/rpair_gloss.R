@@ -84,7 +84,7 @@ rpair_gloss<-
     nobs0 = nrow(x)
 
     # generate comparable pairs
-    is_surv = ncol(y)==2
+    is_surv = is_survival(y)
     cp = y_to_pairs(y)
     ncp = nrow(cp)
 
@@ -118,7 +118,7 @@ rpair_gloss<-
     alpha=as.double(alpha)
 
     # use either number of features or number of non-censored data points
-    if(is_surv) pmax = min(nvars, sum(y[,2]))
+    if(is_surv) pmax = min(nvars, sum(y[,ncol(y)]))
     if(alpha < 0.5) pmax = nvars+1
     nx=as.integer(pmax)
 
@@ -183,8 +183,8 @@ rpair_gloss<-
       }else{
         fdev=rpair:::rpair_control()$fdev
         if(fdev!=0){
-          rpair:::rpair_control_test(fdev=0)
-          on.exit(rpair:::rpair_control_test(fdev=fdev))
+          rpair:::rpair_control(fdev=0)
+          on.exit(rpair:::rpair_control(fdev=fdev))
         }
       }
     }
@@ -233,6 +233,9 @@ rpair_gloss<-
 #' @param kopt Integer value of type.logistic - 0 for Newton, 1 for modified.Newton.
 #' @param rk Half the number of pairs.
 #'
+#' @returns List of results, including: beta, df, dim, lambda, npasses, jerr, dev.ratio, and
+#'    nulldev. See rpair_gloss documenttion for details.
+#'
 #' @author mubu, KC
 #'
 #' @noRd
@@ -241,12 +244,12 @@ plognetfit <-
             alpha,nobs,nvars,jd,vp,cl,ne,nx,nlam,flmin,ulam,thresh,isd,
             vnames,maxit,kopt, rk = nrow(cp)%/%2
   ){
-    # modify cp accordingly
+    ## modify cp accordingly ----
     cp = rbind( cp[1:rk,2:1], cp[-(1:rk),])
     y = c(rep(1,rk),rep(0, nrow(cp)-rk))
     y = cbind(c0=1-y, c1 =y)
-    # ---
 
+    ## prepare other arguments ----
     maxit=as.integer(maxit)
     nc=2
     #Check for size limitations
@@ -255,7 +258,7 @@ plognetfit <-
       stop(paste("Integer overflow; 2*num_lambda*pmax should not exceed .Machine$integer.max. Reduce pmax to be below", trunc(maxvars)))
 
     if(!missing(weights)) y=y*weights
-    ### check if any rows of y sum to zero, and if so deal with them
+    # check if any rows of y sum to zero, and if so exclude them
     weights=drop(y%*%rep(1,nc))
     o=weights>0
     if(!all(o)){ #subset the data
@@ -270,6 +273,7 @@ plognetfit <-
     storage.mode(y)="double"
     offset=y*0 #keeps the shape of y
 
+    ## call Fortran function ----
     fit <- .Fortran( "plognet",
                      parm=alpha,nrow(x),nvars,nc,as.double(x),y,offset,jd,vp,cl,ne,nx,nlam,flmin,ulam,thresh,isd,maxit,kopt,
                      lmu=integer(1),
@@ -286,16 +290,16 @@ plognetfit <-
     )
     class(fit) = c("glmnetfit",class(fit))
 
+    # make human-readable any errors returned by Fortran
     if(fit$jerr!=0){
       errmsg=jerr(fit,maxit,pmax=nx,"log")
       if(errmsg$fatal)stop(errmsg$msg,call.=FALSE)
       else warning(errmsg$msg,call.=FALSE)
     }
 
+    # extract results (betas, lambdas, etc.) from fit object
     outlist=getcoef(fit,nvars,nx,vnames)
-
     dev=fit$dev[seq(fit$lmu)]
-    # KC: add 'type' to this list
     outlist=c(outlist,list(npasses=fit$nlp, jerr=fit$jerr,dev.ratio=dev,nulldev=fit$nulldev))
 
     class(outlist)="lognet"
@@ -328,6 +332,9 @@ plognetfit <-
 #' @param vnames Column names of the input matrix.
 #' @param maxit Maximum number of passes over the data for all lambda values.
 #'
+#' @returns List of results, including: beta, df, dim, lambda, npasses, jerr, dev.ratio, and
+#'    nulldev. See rpair_gloss documentation for details.
+#'
 #' @author mubu, KC
 #'
 #' @noRd
@@ -336,14 +343,15 @@ pfishnetfit <-
             alpha,nobs,nvars,jd,vp,cl,ne,nx,nlam,flmin,ulam,thresh,isd,
             vnames,maxit
   ){
-
+    # prepare arguments
     maxit=as.integer(maxit)
     weights=as.double(weights)
     offset=double(nrow(cp)) #keeps the shape of y
 
+    # call Fortran function
     fit <- .Fortran( "pfishnet",
-                     parm=alpha,nrow(x),nvars,as.double(x),#y,
-                     offset,weights,jd,vp,cl,ne,nx,nlam,flmin,ulam,thresh,isd,#intr,
+                     parm=alpha,nrow(x),nvars,as.double(x),
+                     offset,weights,jd,vp,cl,ne,nx,nlam,flmin,ulam,thresh,isd,
                      maxit,
                      lmu=integer(1),
                      a0=double(nlam),
@@ -359,12 +367,14 @@ pfishnetfit <-
     )
     class(fit) = c("glmnetfit",class(fit))
 
+    # make human-readable any errors returned by Fortran
     if(fit$jerr!=0){
       errmsg=jerr(fit,maxit,pmax=nx,"exp")
       if(errmsg$fatal)stop(errmsg$msg,call.=FALSE)
       else warning(errmsg$msg,call.=FALSE)
     }
 
+    # extract results (betas, lambdas, etc.) from fit object
     outlist=getcoef(fit,nvars,nx,vnames)
     dev=fit$dev[seq(fit$lmu)]
     outlist=c(outlist,list(npasses=fit$nlp,jerr=fit$jerr,dev.ratio=dev,nulldev=fit$nulldev))
