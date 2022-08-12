@@ -17,11 +17,12 @@ s="lambda.1se".}
 \item{\dots}{Additional parameters to pass to the predict function.}
 }
 \value{
-The object returned depends on the values passed via ... .
+The object returned depends on the values passed via ... . See predict.rpair for details.
 }
 \description{
-Predicts fitted values from a cross-validated rapir object given a matrix of new values. Can also extract and
-return coefficient and nonzero lists.
+Predicts fitted values from a cross-validated rapir object given a matrix of new values. Can
+also extract and return coefficient and nonzero lists. Function internally calls predict.rpair
+on the cv_rpair master fit object.
 }
 \author{
 KC

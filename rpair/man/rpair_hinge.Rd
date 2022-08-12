@@ -79,8 +79,8 @@ a modified implementation of \link[gcdnet]{gcdnet}. Only supports squared hinge 
 loss. Refer to gcdnet documentation for further details.
 }
 \examples{
-sfit = rpair_hinge(surv_x, surv_cp, standardize = F, pmax = 50, loss_type = "sqh")
-hfit = rpair_hinge(surv_x, surv_cp, standardize = F, pmax = 50, loss_type = "huh")
+sfit = rpair_hinge(ds1_x, ds1_y, loss_type = "sqh")
+hfit = rpair_hinge(ds1_x, ds1_y, loss_type = "huh")
 
 }
 \author{

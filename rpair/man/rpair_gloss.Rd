@@ -83,8 +83,8 @@ regression) or exponential loss. Uses a modified implementation of \link[glmnet]
 documentation for further details.
 }
 \examples{
-efit = rpair_gloss(surv_x, surv_cp, pmax = 50, loss_type = "exp")
-lfit = rpair_gloss(surv_x, surv_cp, pmax = 50, loss_type = "log")
+efit = rpair_gloss(ds1_x, ds1_y, loss_type = "exp")
+lfit = rpair_gloss(ds1_x, ds1_y, loss_type = "log")
 
 }
 \author{

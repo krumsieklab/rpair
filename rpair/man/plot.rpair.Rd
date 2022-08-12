@@ -9,7 +9,8 @@
 \arguments{
 \item{x}{An "rpair" object.}
 
-\item{xvar}{Plot type. One of c("norm", "lambda", or "dev").}
+\item{xvar}{Value on the x-axis. "norm" plots against the L1-norm of the coefficients, "lambda"
+against the log-lambda sequence, and "dev" against the percent deviance explained.}
 
 \item{legend}{Whether to include a legend. Default: FALSE.}
 
@@ -23,23 +24,7 @@ Produces a coefficient profile plot of the coefficient paths for a fitted "rpair
 "lambda" and "dev" plot types. Plots are created as ggplot objects.
 }
 \examples{
-fp<- function(S){
-time <- S[,1]
-status <- S[,2]
-N = length(time)
-# for tied times
-time[status == 0] = time[status == 0]+1e-4
-dtimes <- time
-dtimes[status == 0] = Inf
-which(outer(time, dtimes, ">"), arr.ind = T)
-}
-# generate some random data
-set.seed(41)
-x = matrix(rnorm(40000),ncol = 200 )
-S = cbind(sample(nrow(x)), rbinom(nrow(x),1,prob = 0.7))
-# generate pairs
-cp = fp(S)
-efit = rpair_gloss(x, cp, standardize = F, pmax = 50, loss_type = "exp")
+efit = rpair_gloss(rpair::ds1_x, rpair::ds1_y, standardize = F, pmax = 50, loss_type = "exp")
 plot(efit, xvar="norm")
 plot(efit, xvar="lambda", label=T)
 

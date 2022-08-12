@@ -2,7 +2,7 @@
 % Please edit documentation in R/cv_rpair.R
 \name{cv_rpair}
 \alias{cv_rpair}
-\title{Cross-Validation function for rpair_gloss and rpair_hinge.}
+\title{Cross-Validation function for rpair.}
 \usage{
 cv_rpair(
   x,
@@ -10,30 +10,36 @@ cv_rpair(
   loss_type = c("exp", "log", "sqh", "huh"),
   lambda = NULL,
   nlambda = 100,
-  type.measure = c("deviance", "cindex"),
+  type_measure = c("deviance", "cindex"),
   nfolds = 5,
   foldid = NULL,
   alignment = c("fraction", "lambda"),
   grouped = FALSE,
   keep = FALSE,
+  use_houwelingen = TRUE,
   ...
 )
 }
 \arguments{
-\item{x}{Input matrix as in rpair_gloss and rpair_hinge.}
+\item{x}{Input matrix of dimension nobs x nvars; each row is an observation vector.}
 
-\item{y}{Response as in rpair_gloss and rpair_hinge.}
+\item{y}{Pairwise ranking analysis response variable. This function supports three types of input types:
+(1) continuous values, (2) survival data, and (3) ranked pairs.}
 
 \item{loss_type}{Loss function to use. One of c("exp", "log" ,"sqh", "huh"). Default: "exp".}
 
+\item{lambda}{Optional user-supplied lambda sequence. Default: NULL.}
+
 \item{nlambda}{Number of lambda values. Default: 100.}
 
-\item{type.measure}{Loss to use for cross-validation. Available loss functions are "deviance" and "cindex".}
+\item{type_measure}{Loss to use for cross-validation. Available loss functions are "deviance"
+(use loss function) and "cindex" (use concordance). Default: "deviance".}
 
 \item{nfolds}{Number of folds. Default: 5.}
 
 \item{foldid}{Optional vector of values between 1 and nfolds identifying which fold each observation should be in.
-If provided, nofolds can be missing. Pairs caanot be provided as input when foldid is missing.}
+If provided, no folds can be missing. Pairs cannot be provided as input when foldid is
+missing. Default: NULL.}
 
 \item{alignment}{Determines whether the predictions in each fold are aligned according to the fraction
 of progress along each fold ("fraction", default) or to use the lambda values computed on the master fit
@@ -45,11 +51,43 @@ c("fraction", "lambda"). Default: "fraction".}
 \item{keep}{If keep=TRUE, returns a list of fitted values for each fold and a corresponding list of foldids.
 Default: FALSE.}
 
-\item{\dots}{Additional parameters to pass to the rpair_gloss or rpair_hinge function.}
+\item{use_houwelingen}{Whether to use the houwelingen method for calculating loss. Default: TRUE.}
+
+\item{\dots}{Additional parameters to pass to the rpair function.}
 }
 \value{
 An object of class "cv_rpair" containing the following list of values:
+\itemize{
+   \item{h_dev - Deviance measures calculated using houwelingen method. This is a named list
+      containing the following:
+      \itemize{
+         \item{lambda - the values of lambda used in the fits.}
+         \item{cvm - the mean cross-validated error (vector of length lambda).}
+         \item{cvsd - estimate standard error of cvm (vector of length lambda).}
+         \item{cvup - upper curve = cvm+cvsd.}
+         \item{cvlo - lower curve = cvm-cvsd.}
+         \item{nzero - number of non-zero coefficients at each lambda.}
+         \item{lambda.min - value of lambda that produces minimum cvm.}
+         \item{lambda.1se - largest value of lambda that error is within 1 std error of the minimum.}
+         \item{index - a one column matrix with indices of lambda.min and lambda.1se.}
+     }
+   }
+   \item{h_conc - Concordance measures calculated using houwelingen method. See h_dev.}
+   \item{s_dev - Deviance measures calculated using standard method. See h_dev.}
+   \item{s_conc - Concordance measures calculated using standard method. See h_dev.}
+   \item{call - The call that produced the cv_rpair object.}
+   \item{name - Text string indicating the loss function (for plotting purposes).}
+   \item{type_measure - Loss to use with util functions (e.g. plot).}
+   \item{rpair.fit - A fitted rpair object for the full data.}
+   \item{houw - Whether to use measures calculated using houwelingen method with util functions
+      (e.g. plot).}
+   \item{fit.prevail - If keep=TRUE, a list of prevalidated fits for each fold. Some values
+      can be NA if the length of lambdas calculated for that fold are shorter than the master
+      fit.}
+   \item{foldid - If keep=TRUE, the fold assignments used.}
+   \item{foldid_df - Data frame consisting of columns: index, (outcome columns), and fold.}
+}
 }
 \description{
-Performs k-fold cross-validation for rpair_gloss or rpair_hinge.
+Performs k-fold cross-validation of rpair.
 }

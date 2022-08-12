@@ -18,3 +18,8 @@ A matrix of coefficients for the provided lambda.
 \description{
 This function is equivalent to calling predict(object, type="coefficients") on a cv_rpair object.
 }
+\examples{
+efit = cv_rpair(ds1_x, ds1_y, nlambda=25, loss_type="exp")
+ec = coef(efit, s="lambda.1se")
+
+}

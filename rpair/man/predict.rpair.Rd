@@ -18,30 +18,14 @@ sequence used to create the model.}
 of coefficients, and type "nonzero" returns a list of the indices of the nonzero coefficients.}
 }
 \value{
-The object returned depends on the value of "type".
+The object returned depends on the value of \code{type}. See \code{type}.
 }
 \description{
 Predicts fitted values given a matrix of new values. Can also extract and return coefficient and nonzero lists.
 }
 \examples{
-fp<- function(S){
-time <- S[,1]
-status <- S[,2]
-N = length(time)
-# for tied times
-time[status == 0] = time[status == 0]+1e-4
-dtimes <- time
-dtimes[status == 0] = Inf
-which(outer(time, dtimes, ">"), arr.ind = T)
-}
-# generate some random data
-set.seed(41)
-x = matrix(rnorm(40000),ncol = 200 )
-S = cbind(sample(nrow(x)), rbinom(nrow(x),1,prob = 0.7))
-# generate pairs
-cp = fp(S)
-efit = rpair_gloss(x, cp, standardize = F, pmax = 50, loss_type = "exp")
-newpred = predict(efit, x, type="link")
+efit = rpair_gloss(rpair::ds1_x, rpair::ds1_y, standardize = F, pmax = 50, loss_type = "exp")
+newpred = predict(efit, rpair::ds1_x, type="link")
 nonzero = predict(efit, type = "nonzero")
 
 }

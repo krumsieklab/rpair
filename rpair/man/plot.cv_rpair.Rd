@@ -4,21 +4,23 @@
 \alias{plot.cv_rpair}
 \title{Plot the cross-validation curve for cv.rpair}
 \usage{
-\method{plot}{cv_rpair}(cvobj, sign.lambda = 1, ggplot = T)
+\method{plot}{cv_rpair}(cvobj, sign.lambda = 1, ggplot = T, unique_nz = F, nz_size = 3)
 }
 \arguments{
 \item{cvobj}{Fitted "cv_rpair" object.}
 
 \item{sign.lambda}{Either plot against log(lambda) or its negative. Default: 1.}
 
-\item{ggplot}{Whether to plot and return a ggplot object. Default: F.}
+\item{ggplot}{Whether to plot and return a ggplot object. Default: T.}
 }
 \value{
-If ggplot=T, a ggplot object.
+If ggplot=T, a ggplot object. If ggplot=F, a base R plot.
 }
 \description{
-Plots the cross-validation curve, and upper and lower standard error curves, as a function of the lambda values
-used. Can return a ggplot object or use base R.
+Plots the cross-validation curve, and upper and lower standard error bars (deviance) /
+curves (concordance), as a function of the lambda values. Whether deviance or
+concordance is plotted is determined by type.measure in cv_rpair fit object. Can return
+a ggplot object or use base R.
 }
 \author{
 KC
