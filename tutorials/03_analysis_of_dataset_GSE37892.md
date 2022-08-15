@@ -8,6 +8,7 @@ library(rpair)
 library(magrittr)
 library(survival)
 library(mcsurvdata)
+library(ggplot2)
 ```
 
 ## Download and Tidy Datasets
@@ -54,7 +55,7 @@ set.seed(42)
 fids = rpair:::get_stratified_folds(y_tr, 5)[,4]
 
 # train model - THIS MAY TAKE 5-10 MINUTES
-fit = cv_rpair(y = y_tr, x = x_tr, loss_type = "log", foldid=fids)
+fit = cv_rpair(y = y_tr, x = x_tr, loss_type = "exp", foldid=fids)
 
 ```
 
@@ -65,11 +66,11 @@ x_te = nods_coad$GSE37892$x
 y_te = nods_coad$GSE37892$y
 
 # calculate concordance
-log_conc = concordance(y_te~predict(fit, x_te, s = "lambda.min" ), reverse = T)
+exp_conc = concordance(y_te~predict(fit, x_te, s = "lambda.min" ), reverse = T)
 
-log_conc$concordance
+exp_conc$concordance
 ```
-0.8264816
+0.8278163
 
 
 ## Comparison with glmnet
@@ -86,10 +87,10 @@ cox_conc$concordance
 
 ```r
 # assemble data
-df <- data.frame("model" = c("rpair[log]", "cox"), 
+df <- data.frame("model" = c("rpair[exp]", "cox"), 
             "cancer" = "COAD", 
-            "concordance" = c(log_conc$concordance, cox_conc$concordance),
-            "se"= c(sqrt(log_conc$var), sqrt(cox_conc$var)))
+            "concordance" = c(exp_conc$concordance, cox_conc$concordance),
+            "se"= c(sqrt(exp_conc$var), sqrt(cox_conc$var)))
 
 # plot comparison
 ggplot(df, aes(x = model, y = concordance, color = model)) + 

@@ -1,3 +1,6 @@
+# KC: TO DO:
+# - remove survival package dependency
+
 #' Convert response variable to comparable pairs
 #'
 #' Convert supported response variable input types to comparable pairs. Comparable pairs of the format: two column
@@ -11,6 +14,8 @@
 #'
 #' @noRd
 y_to_pairs <- function(y){
+
+  require(survival)
 
   # type of the outcome
   if(is.null(nrow(y))){ y = as.numeric(y); ytype = "ranking"}
