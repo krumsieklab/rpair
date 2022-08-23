@@ -77,6 +77,11 @@ cv_rpair <- function(x,
   type_measure = match.arg(type_measure)
   alignment = match.arg(alignment)
 
+  # passing dots multiple times produces strange errors - extract arguments in dots
+  dot_args <- as.list(substitute(list(...)))[-1L]
+  # get actual values
+  dot_args <- as.list(sapply(dot_args, eval.parent))
+
   # perform argument checks
   if (!is.null(lambda) && length(lambda) < 2)
     stop("Need more than one value of lambda for cv_rpair")
@@ -94,10 +99,13 @@ cv_rpair <- function(x,
   #   the internal cv_rpair_run function; this overwrites the returned rpair call object
   cv.call = rpair.call = match.call(expand.dots = TRUE)
   which = match(c("type_measure", "nfolds", "foldid", "grouped",
-                  "keep"), names(rpair.call), FALSE)
+                  "keep", "alignment"), names(rpair.call), FALSE)
   if (any(which))
     rpair.call = rpair.call[-which]
   rpair.call[[1]] = as.name("rpair")
+  # save call objects as strings so not evaluated when passed to do.call below
+  rpair.call <- do.call(paste, as.list(deparse(rpair.call)))
+  cv.call <- do.call(paste, as.list(deparse(cv.call)))
 
   # if foldid not user-provided, generate random folds. If outcome is survival, use stratified fold
   #   function to ensure even distribution of outcomes per fold.
@@ -121,9 +129,12 @@ cv_rpair <- function(x,
   if (nfolds < 3)
     stop("nfolds must be bigger than 3; nfolds=10 recommended")
 
-  cv_rpair_run(x, y, loss_type, lambda, nlambda, type_measure,
-                   nfolds, foldid, alignment, grouped, keep,
-                   rpair.call, cv.call, foldid_df, use_houwelingen, is_pairs, ...)
+  cv_rpair_args = list(x=x, y=y, loss_type=loss_type, lambda=lambda, nlambda=nlambda, type_measure=type_measure,
+                       nfolds=nfolds, foldid=foldid, alignment=alignment, grouped=grouped, keep=keep,
+                       rpair.call=rpair.call, cv.call=cv.call, foldid_df=foldid_df, use_houwelingen=use_houwelingen,
+                       is_pairs=is_pairs)
+  cv_rpair_args = c(cv_rpair_args, dot_args)
+  do.call(cv_rpair_run, cv_rpair_args)
 
 }
 
@@ -164,12 +175,17 @@ cv_rpair_run <- function(x, y, loss_type, lambda, nlambda, type_measure, nfolds,
                          foldid, alignment, grouped, keep, rpair.call,
                          cv.call, foldid_df, use_houwelingen, is_pairs, ...){
 
+  # passing dots multiple times produces strange errors - extract arguments in dots
+  dot_args <- as.list(substitute(list(...)))[-1L]
+
   # fit model on entire dataset to obtain 'master fit' and corresponding lambda values
-  rpair.object = rpair(x, y, loss_type=loss_type, lambda = lambda, nlambda = nlambda, ...)
+  rpair_args = list(x=x,y=y,loss_type=loss_type,lambda=lambda,nlambda=nlambda)
+  rpair_args = c(rpair_args, dot_args)
+  rpair.object = do.call(rpair, rpair_args)
 
   # calling rpair internally causes function def to be returned for call; overwrite with function
   #   call from line 66
-  rpair.object$call = rpair.call
+  rpair.object$call = str2lang(rpair.call)
   losstype = class(rpair.object)[[1]]
   user_type_measure = type_measure
   type_measure = rpair_cvtype(type_measure, losstype)
@@ -216,7 +232,7 @@ cv_rpair_run <- function(x, y, loss_type, lambda, nlambda, type_measure, nfolds,
   # assemble cross-validation results
   cvname = names(type_measure)
   names(cvname) = type_measure
-  out = c(out, list(call = cv.call, name = cvname, type_measure = user_type_measure, rpair.fit = rpair.object,
+  out = c(out, list(call = str2lang(cv.call), name = cvname, type_measure = user_type_measure, rpair.fit = rpair.object,
                     houw=use_houwelingen))
   if (keep)
     out = c(out, list(fit.preval = predmat, foldid = foldid, foldid_df = foldid_df))
