@@ -1,7 +1,7 @@
 Tutorial 4: supported outcome types
 ================
 
-This tutorial showcases each of the different types of outcome / response variables supported by the rpair package. These are: survival outcome (2 columns), survival outcome (3 columns), numeric outcome, ordinal outcome, factor outcome, and comparable pairs. For this example, we first create a single simulated dataset and a vector of coefficients. We then use these to generate the specific outcomes in each of their corresponding sections.
+This tutorial showcases each of the different types of outcome / response variables supported by the rpair package. These are: survival outcome (2 columns), survival outcome (3 columns), numeric outcome, ordinal outcome, factor outcome, and comparable pairs. For this example, we first create a single simulated dataset and a vector of coefficients. We modify this vector to generate the specific outcome types in each section.
 
 ``` r
 library(rpair)

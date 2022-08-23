@@ -1,7 +1,7 @@
 Tutorial 3: example analysis on transcriptomics dataset GSE37892
 ================
 
-This tutorial demonstrates how to use rpair for performing a simple external analysis. The example analysis is performed using two public transcriptomics colorectal adenocarcinoma datasets from the mcsurvdata package: GSE39582 (model fitting) and GSE37892 (model evaluation).
+This tutorial demonstrates how to use the rpair package to perform a simple external analysis. The example analysis is performed using two public transcriptomics colorectal adenocarcinoma datasets from the mcsurvdata package: GSE39582 (model fitting) and GSE37892 (model evaluation).
 
 ``` r
 library(rpair)
@@ -34,7 +34,6 @@ Z = paste0(nda.coad$dataset, nda.coad$cohort)
 # split data to cohorts 
 nods_coad <-
   lapply( structure( unique(Z), names = unique(Z) ), function(i){
-    print(i)
     inds = (Z==i)
     x = as.matrix(scale(mrna[inds,]))
     y = Surv( S[inds,"t"], S[inds,"e"] )

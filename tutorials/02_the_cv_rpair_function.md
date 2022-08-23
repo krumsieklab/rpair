@@ -3,7 +3,7 @@ Tutorial 2: the cv_rpair function
 
 This tutorial demonstrates how to use the cv_rpair function and its utility functions. The cv_rpair function performs
 k-fold cross-validation of the rpair function. The cv_rpair functions supports two kinds of input: survival and continuous. Like rpair, cv_rpair has three corresponding utility functions: predict, coef, and plot. 
-Two important parameters featured in this tutorial are type.measure. The type.measure parameter allows  the user to select which loss function to use for cross-validation - "deviance" (default) or "cindex". Selecting "deviance" uses the selected loss function itself (e.g. exponential loss) while selecting "cindex" uses the concordance measure.
+An important parameter featured in this tutorial is type.measure. The type.measure parameter allows  the user to select which loss function to use for cross-validation - "deviance" (default) or "cindex". Selecting "deviance" uses the selected loss function itself (e.g. exponential loss) while selecting "cindex" uses the concordance measure.
 
 ``` r
 library(rpair)
@@ -36,7 +36,7 @@ x[1:4,1:4]
 
 
 ```r
-# firs five rows and columns of the survival outcome matrix
+# first five rows and columns of the survival outcome matrix
 y[1:5,]
 ```
          time status
